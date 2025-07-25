@@ -1,88 +1,125 @@
-import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../api';
+// src/components/ProfilePage.jsx
 
-const ProfilePage = ({ showNotification }) => {
-    const [profile, setProfile] = useState(null);
-    const [capabilities, setCapabilities] = useState([]);
-    const [loading, setLoading] = useState(true);
+import React, { useState, useEffect, useCallback } from 'react';
+import { apiRequest } from '../api';
+import { isValidDutchPostalCode, isValidDutchPhoneNumber, isValidIBAN } from '../utils/validation';
+
+const ProfilePage = ({ showNotification, currentUser }) => {
+    const [profileData, setProfileData] = useState(null);
+    const [originalProfileData, setOriginalProfileData] = useState(null);
+    const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const validate = useCallback((data) => {
+        if (!data) return true;
+        const newErrors = {};
+        if (data.postcode && !isValidDutchPostalCode(data.postcode)) newErrors.postcode = 'Ongeldige postcode';
+        if (data.telefoon && !isValidDutchPhoneNumber(data.telefoon)) newErrors.telefoon = 'Ongeldig telefoonnummer';
+        if (data.iban && !isValidIBAN(data.iban)) newErrors.iban = 'Ongeldig IBAN-nummer';
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    }, []);
 
     useEffect(() => {
         const fetchProfile = async () => {
+            setIsLoading(true);
             try {
-                const data = await apiRequest('/profile');
-                setProfile(data);
-                setCapabilities(data.capabilities || []);
+                const data = await apiRequest('/profile', 'GET');
+                setProfileData(data);
+                setOriginalProfileData(data);
+                validate(data);
             } catch (error) {
                 showNotification(error.message, 'error');
             } finally {
-                setLoading(false);
+                setIsLoading(false);
             }
         };
-        fetchProfile();
-    }, [showNotification]);
 
-    const handleProfileChange = (e) => setProfile(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        // DE FIX: Voer de fetch alleen uit als we zeker weten wie de gebruiker is.
+        if (currentUser) {
+            fetchProfile();
+        }
+    }, [currentUser, showNotification, validate]);
 
-    const handleCapabilityChange = (index, field, value) => {
-        const newCaps = [...capabilities];
-        newCaps[index][field] = value;
-        setCapabilities(newCaps);
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        const newData = { ...profileData, [name]: value };
+        setProfileData(newData);
+        validate(newData);
     };
 
-    const addCapability = () => setCapabilities([...capabilities, { machineType: '', materials: '', details: '' }]);
-    const removeCapability = (index) => setCapabilities(capabilities.filter((_, i) => i !== index));
-
-    const handleProfileSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validate(profileData)) return;
+        setIsSubmitting(true);
         try {
-            await apiRequest('/profile', 'PUT', profile);
-            showNotification('Profiel succesvol bijgewerkt', 'success');
+            const response = await apiRequest('/profile', 'PUT', profileData);
+            showNotification('Profiel succesvol opgeslagen!');
+            setOriginalProfileData(response.user);
+            setProfileData(response.user);
+            setErrors({});
         } catch (error) {
             showNotification(error.message, 'error');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    const handleCapabilitiesSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await apiRequest('/profile/capabilities', 'PUT', { capabilities });
-            showNotification('Capaciteiten succesvol opgeslagen', 'success');
-        } catch (error) {
-            showNotification(error.message, 'error');
-        }
-    };
+    const getBorderClasses = (fieldName) => errors[fieldName] ? 'border-red-500' : 'border-gray-300';
+    const inputClasses = "input input-bordered w-full";
+    const disabledInputClasses = "input input-bordered w-full bg-base-200";
+    const hasChanges = JSON.stringify(profileData) !== JSON.stringify(originalProfileData);
+    const hasErrors = Object.keys(errors).length > 0;
 
-    if (loading) return <p>Profiel laden...</p>;
-    if (!profile) return <p>Kon profiel niet laden.</p>;
+    if (isLoading) return <div className="text-center p-10">Profiel laden...</div>;
+    if (!profileData) return <div className="text-center p-10">Kon profielgegevens niet laden.</div>;
 
     return (
-        <div className="max-w-4xl mx-auto mt-10 space-y-8">
-            <form onSubmit={handleProfileSubmit} className="card">
-                <h2 className="text-2xl font-bold mb-6">Mijn Bedrijfsprofiel</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div><label className="block text-gray-700 mb-2">Bedrijfsnaam</label><input type="text" name="bedrijfsnaam" value={profile.bedrijfsnaam || ''} onChange={handleProfileChange} className="w-full p-2 border rounded-md" /></div>
-                    <div><label className="block text-gray-700 mb-2">Plaats</label><input type="text" name="plaats" value={profile.plaats || ''} onChange={handleProfileChange} className="w-full p-2 border rounded-md" /></div>
+        <div className="max-w-2xl mx-auto">
+            <h1 className="text-3xl font-bold mb-6">Mijn Bedrijfsprofiel</h1>
+            <form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                    <div>
+                        <label htmlFor="bedrijfsnaam" className="label"><span className="label-text">Bedrijfsnaam</span></label>
+                        <input id="bedrijfsnaam" name="bedrijfsnaam" type="text" value={profileData.bedrijfsnaam || ''} onChange={handleChange} className={inputClasses} />
+                    </div>
+                    <div>
+                        <label htmlFor="kvk" className="label"><span className="label-text">KvK-nummer</span></label>
+                        <input id="kvk" name="kvk" type="text" value={profileData.kvk || ''} className={disabledInputClasses} disabled />
+                    </div>
+                    <div>
+                        <label htmlFor="email" className="label"><span className="label-text">E-mailadres</span></label>
+                        <input id="email" name="email" type="email" value={profileData.email || ''} className={disabledInputClasses} disabled />
+                    </div>
+                    <div>
+                        <label htmlFor="telefoon" className="label"><span className="label-text">Telefoonnummer</span></label>
+                        <input id="telefoon" name="telefoon" type="text" value={profileData.telefoon || ''} onChange={handleChange} className={`${inputClasses} ${getBorderClasses('telefoon')}`} />
+                        {errors.telefoon && <p className="text-red-500 text-sm mt-1">{errors.telefoon}</p>}
+                    </div>
+                    <div>
+                        <label htmlFor="adres" className="label"><span className="label-text">Adres</span></label>
+                        <input id="adres" name="adres" type="text" value={profileData.adres || ''} onChange={handleChange} className={inputClasses} />
+                    </div>
+                    <div>
+                        <label htmlFor="postcode" className="label"><span className="label-text">Postcode</span></label>
+                        <input id="postcode" name="postcode" type="text" value={profileData.postcode || ''} onChange={handleChange} className={`${inputClasses} ${getBorderClasses('postcode')}`} />
+                        {errors.postcode && <p className="text-red-500 text-sm mt-1">{errors.postcode}</p>}
+                    </div>
+                    <div>
+                        <label htmlFor="plaats" className="label"><span className="label-text">Plaats</span></label>
+                        <input id="plaats" name="plaats" type="text" value={profileData.plaats || ''} onChange={handleChange} className={inputClasses} />
+                    </div>
+                     <div>
+                        <label htmlFor="iban" className="label"><span className="label-text">IBAN</span></label>
+                        <input id="iban" name="iban" type="text" value={profileData.iban || ''} onChange={handleChange} className={`${inputClasses} ${getBorderClasses('iban')}`} />
+                        {errors.iban && <p className="text-red-500 text-sm mt-1">{errors.iban}</p>}
+                    </div>
                 </div>
-                <div className="mt-6 text-right"><button type="submit" className="btn btn-primary">Bedrijfsgegevens Opslaan</button></div>
-            </form>
-            <form onSubmit={handleCapabilitiesSubmit} className="card">
-                <h2 className="text-2xl font-bold mb-6">Mijn Productiecapaciteiten</h2>
-                <p className="text-gray-600 mb-6">Voeg hier uw machines en specialisaties toe.</p>
-                <div className="space-y-6">
-                    {capabilities.map((cap, index) => (
-                        <div key={index} className="p-4 border rounded-lg relative">
-                            <button type="button" onClick={() => removeCapability(index)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold">X</button>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><label className="block text-gray-700 mb-2">Machinetype</label><input type="text" placeholder="bv. Heidelberg Speedmaster" value={cap.machineType} onChange={e => handleCapabilityChange(index, 'machineType', e.target.value)} className="w-full p-2 border rounded-md" required /></div>
-                                <div><label className="block text-gray-700 mb-2">Materialen (komma's)</label><input type="text" placeholder="bv. papier, karton, vinyl" value={cap.materials} onChange={e => handleCapabilityChange(index, 'materials', e.target.value)} className="w-full p-2 border rounded-md" required /></div>
-                                <div className="md:col-span-2"><label className="block text-gray-700 mb-2">Overige specificaties</label><textarea placeholder="bv. Max formaat: 70x100cm" value={cap.details} onChange={e => handleCapabilityChange(index, 'details', e.target.value)} className="w-full p-2 border rounded-md"></textarea></div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-                <div className="mt-6 flex justify-between">
-                    <button type="button" onClick={addCapability} className="btn btn-secondary">Nieuwe Capaciteit Toevoegen</button>
-                    <button type="submit" className="btn btn-primary">Capaciteiten Opslaan</button>
+                <div className="pt-4 border-t">
+                    <button type="submit" disabled={!hasChanges || isSubmitting || hasErrors} className="w-full btn btn-primary">
+                        {isSubmitting ? <span className="loading loading-spinner"></span> : 'Wijzigingen Opslaan'}
+                    </button>
                 </div>
             </form>
         </div>

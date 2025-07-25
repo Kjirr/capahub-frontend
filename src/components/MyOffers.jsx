@@ -1,49 +1,68 @@
 // src/components/MyOffers.jsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
 
-const MyOffers = ({ currentUser, navigateTo, showNotification }) => {
-    const [myOffers, setMyOffers] = useState([]);
-    const [loading, setLoading] = useState(true); // Voeg loading state toe
+const MyOffers = ({ showNotification, navigateTo, currentUser }) => {
+    const [offers, setOffers] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const fetchMyOffers = useCallback(async () => {
-        if (!currentUser) return;
-        setLoading(true);
-        try {
-            // GEBRUIK DE NIEUWE, CORRECTE ROUTE
-            const data = await apiRequest(`/offers/my-offers`);
-            setMyOffers(data);
-        } catch (error) {
-            showNotification(error.message, 'error');
-        } finally {
-            setLoading(false);
+    useEffect(() => {
+        const fetchOffers = async () => {
+            setIsLoading(true);
+            try {
+                const data = await apiRequest('/offers/my-offers', 'GET');
+                setOffers(data);
+            } catch (error) {
+                showNotification(error.message, 'error');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        if (currentUser) {
+            fetchOffers();
         }
     }, [currentUser, showNotification]);
 
-    useEffect(() => {
-        fetchMyOffers();
-    }, [fetchMyOffers]);
-
-    if (loading) {
-        return <p>Mijn aanbod wordt geladen...</p>;
+    if (isLoading) {
+        return <div className="text-center p-10">Aanbod laden...</div>;
     }
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold mb-6">Mijn Geplaatste Aanbod</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {myOffers.length > 0 ? myOffers.map(offer => (
-                    <div key={offer.id} className="card card-clickable" onClick={() => navigateTo('offer-details', offer.id)}>
-                        <h3 className="text-xl font-bold mb-2">{offer.machineType}</h3>
-                        <p className="text-gray-600 mb-1"><strong>Materiaal:</strong> {offer.material}</p>
-                        <p className="text-gray-600 mb-4 truncate"><strong>Details:</strong> {offer.capacityDetails}</p>
-                        <div className="text-right text-lg font-bold text-gray-800">{offer.price}</div>
-                    </div>
-                )) : (
-                    <p>U heeft nog geen aanbod geplaatst. <span className="link" onClick={() => navigateTo('offer-capacity')}>Bied nu capaciteit aan.</span></p>
-                )}
+        <div className="container mx-auto">
+            <div className="flex justify-between items-center mb-8">
+                 <div>
+                    <h1 className="text-3xl font-bold">Mijn Aanbod</h1>
+                    <p className="text-base-content/70 mt-2">Hier beheert u uw aanbod van vrije capaciteit.</p>
+                </div>
+                <button onClick={() => navigateTo('create-offer')} className="btn btn-primary">
+                    Nieuw Aanbod Plaatsen
+                </button>
             </div>
+            {offers.length === 0 ? (
+                 <div className="card bg-base-100 text-center p-10">
+                    <p>U heeft nog geen aanbod van vrije capaciteit geplaatst.</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {offers.map(offer => (
+                        <div 
+                            key={offer.id} 
+                            onClick={() => navigateTo('offer-details', offer.id)} 
+                            className="card bg-base-100 shadow-md hover:shadow-xl cursor-pointer transition-shadow"
+                        >
+                            <div className="card-body">
+                                <h2 className="card-title">{offer.machineType}</h2>
+                                <div className="flex items-center space-x-4 text-sm text-base-content/70 mt-2">
+                                    <span><strong>Materiaal:</strong> {offer.material}</span>
+                                    <span><strong>Prijsindicatie:</strong> {offer.price}</span>
+                                    <span><strong>Geplaatst op:</strong> {new Date(offer.createdAt).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

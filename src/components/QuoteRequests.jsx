@@ -1,36 +1,71 @@
-import React, { useState, useEffect } from 'react';
+// src/components/QuoteRequests.jsx
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiRequest } from '../api';
 
-const QuoteRequests = ({ navigateTo, showNotification }) => {
+const QuoteRequests = ({ showNotification, navigateTo, currentUser }) => {
     const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchRequests = async () => {
-            try {
-                const data = await apiRequest('/quote-requests');
-                setRequests(data);
-            } catch (error) {
-                showNotification(error.message, 'error');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchRequests();
+    const fetchRequests = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            // Deze route haalt de niet-toegewezen opdrachten van de marktplaats op
+            const data = await apiRequest('/marketplace/jobs', 'GET');
+            setRequests(data);
+        } catch (error) {
+            showNotification(error.message, 'error');
+        } finally {
+            setIsLoading(false);
+        }
     }, [showNotification]);
 
-    if (loading) return <p>Offerteaanvragen laden...</p>;
+    useEffect(() => {
+        if (currentUser) {
+            fetchRequests();
+        }
+    }, [currentUser, fetchRequests]);
+
+    const handleAssign = async (jobId) => {
+        try {
+            await apiRequest(`/jobs/${jobId}/assign`, 'PUT');
+            showNotification('Opdracht aan uzelf toegewezen. U kunt nu een offerte indienen.', 'success');
+            // Stuur de gebruiker direct naar de offertepagina
+            navigateTo('submit-quote', jobId);
+        } catch (error) {
+            showNotification(error.message, 'error');
+            fetchRequests(); // Herlaad de lijst als het toewijzen mislukt
+        }
+    };
+
+    if (isLoading) return <div className="text-center p-10">Offerteaanvragen laden...</div>;
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold mb-6">Inkomende Offerteaanvragen</h2>
-            {requests.length === 0 ? (<p>Er zijn momenteel geen nieuwe offerteaanvragen voor u.</p>) : (
+        <div className="container mx-auto">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold">Gedeelde Werkbak: Offerteaanvragen</h1>
+                <p className="text-base-content/70 mt-2">Dit zijn de openbare opdrachten die wachten op een offerte.</p>
+            </div>
+
+            {requests.length === 0 ? (
+                <div className="card bg-base-100 text-center p-10">
+                    <p>Er zijn momenteel geen nieuwe offerteaanvragen.</p>
+                </div>
+            ) : (
                 <div className="space-y-4">
-                    {requests.map(req => (
-                        <div key={req.id} className="card card-clickable" onClick={() => navigateTo('submit-quote', req.jobId)}>
-                            <h3 className="text-xl font-bold">{req.jobTitle}</h3>
-                            <p className="text-gray-600">Aanvraag geplaatst op: {new Date(req.createdAt).toLocaleDateString('nl-NL')}</p>
-                            <div className="text-right mt-2"><span className="font-semibold text-gray-800">Bekijk en Dien Offerte In →</span></div>
+                    {requests.map(job => (
+                        <div key={job.id} className="card bg-base-100 shadow-md">
+                            <div className="card-body flex-row justify-between items-center">
+                                <div>
+                                    <h2 className="card-title">{job.title}</h2>
+                                    <p className="text-sm text-base-content/70">Klant: {job.company.name}</p>
+                                </div>
+                                <div className="card-actions">
+                                    <button onClick={() => handleAssign(job.id)} className="btn btn-primary">
+                                        Toewijzen & Offerte maken
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>

@@ -1,93 +1,102 @@
-// src/components/EditJob.jsx - Complete versie
+// src/components/EditJob.jsx
 
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
 
-const EditJob = ({ jobId, navigateTo, showNotification }) => {
-    const [formData, setFormData] = useState(null);
+const EditJob = ({ showNotification, navigateTo, viewParam: jobId, currentUser }) => {
+    const [jobData, setJobData] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchJob = async () => {
-            if (!jobId) return;
+            setIsLoading(true);
             try {
-                const jobData = await apiRequest(`/jobs/${jobId}`);
-                // Formatteer de datum correct voor het HTML-input-veld
-                if (jobData.deadline) {
-                    jobData.deadline = new Date(jobData.deadline).toISOString().split('T')[0];
-                }
-                setFormData(jobData);
+                const data = await apiRequest(`/jobs/${jobId}`, 'GET');
+                // Formatteer de datums correct voor de input-velden
+                data.deadline = data.deadline ? new Date(data.deadline).toISOString().split('T')[0] : '';
+                data.quotingDeadline = data.quotingDeadline ? new Date(data.quotingDeadline).toISOString().split('T')[0] : '';
+                setJobData(data);
             } catch (error) {
-                showNotification('Kon opdrachtgegevens niet laden.', 'error');
+                showNotification(error.message, 'error');
+            } finally {
+                setIsLoading(false);
             }
         };
-        fetchJob();
-    }, [jobId, showNotification]);
+        if (currentUser && jobId) {
+            fetchJob();
+        }
+    }, [currentUser, jobId, showNotification]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setFormData(prev => ({ 
-            ...prev, 
-            [name]: type === 'checkbox' ? checked : value 
-        }));
+        setJobData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
-    const handleUpdate = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
-            await apiRequest(`/jobs/${jobId}`, 'PUT', formData);
+            await apiRequest(`/jobs/${jobId}`, 'PUT', jobData);
             showNotification('Opdracht succesvol bijgewerkt!');
             navigateTo('job-details', jobId);
         } catch (error) {
             showNotification(error.message, 'error');
+        } finally {
+            setIsSubmitting(false);
         }
     };
+    
+    const inputClasses = "w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500";
 
-    if (!formData) return <p>Opdracht wordt geladen...</p>;
+    if (isLoading) return <div className="text-center p-10">Opdracht laden...</div>;
+    if (!jobData) return <div className="text-center p-10">Kon opdracht niet laden.</div>;
 
     return (
         <div className="max-w-2xl mx-auto">
-            <form onSubmit={handleUpdate} className="card">
-                <h2 className="text-2xl font-bold text-center mb-6">Opdracht Aanpassen</h2>
-                <div className="space-y-4">
+            <h1 className="text-3xl font-bold mb-6">Opdracht Bewerken</h1>
+            <form onSubmit={handleSubmit} className="card p-6 space-y-6">
+                 <div className="space-y-4">
                     <div>
-                        <label className="block text-gray-700 mb-2">Titel van de opdracht*</label>
-                        <input type="text" name="title" value={formData.title || ''} onChange={handleChange} className="w-full p-2 border rounded-md" required />
+                        <label htmlFor="title" className="block font-semibold mb-1">Titel</label>
+                        <input id="title" name="title" type="text" value={jobData.title} onChange={handleChange} className={inputClasses} required />
                     </div>
                     <div>
-                        <label className="block text-gray-700 mb-2">Omschrijving*</label>
-                        <textarea name="description" value={formData.description || ''} onChange={handleChange} className="w-full p-2 border rounded-md" required />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-gray-700 mb-2">Oplage*</label>
-                            <input type="number" name="quantity" value={formData.quantity || ''} onChange={handleChange} className="w-full p-2 border rounded-md" required />
-                        </div>
-                        <div>
-                            <label className="block text-gray-700 mb-2">Materiaal*</label>
-                            <input type="text" name="material" value={formData.material || ''} onChange={handleChange} className="w-full p-2 border rounded-md" required />
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-gray-700 mb-2">Formaat</label>
-                            <input type="text" name="format" value={formData.format || ''} onChange={handleChange} className="w-full p-2 border rounded-md" />
-                        </div>
-                        <div>
-                            <label className="block text-gray-700 mb-2">Gewenste deadline</label>
-                            <input type="date" name="deadline" value={formData.deadline || ''} onChange={handleChange} className="w-full p-2 border rounded-md" />
-                        </div>
-                    </div>
-                     <div className="mt-4 pt-4 border-t">
-                        <label className="flex items-center">
-                            <input type="checkbox" name="isPublic" checked={formData.isPublic || false} onChange={handleChange} className="h-4 w-4 text-gray-600 border-gray-300 rounded" />
-                            <span className="ml-2 text-gray-700">Plaats deze opdracht openbaar op de Marktplaats</span>
-                        </label>
+                        <label htmlFor="description" className="block font-semibold mb-1">Omschrijving</label>
+                        <textarea id="description" name="description" value={jobData.description} onChange={handleChange} className={inputClasses} rows="5" required></textarea>
                     </div>
                 </div>
-                <div className="flex justify-end gap-4 mt-6">
-                    <button type="button" onClick={() => navigateTo('job-details', jobId)} className="btn btn-secondary">Annuleren</button>
-                    <button type="submit" className="btn btn-primary">Wijzigingen Opslaan</button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                    <div>
+                        <label htmlFor="quantity" className="block font-semibold mb-1">Oplage</label>
+                        <input id="quantity" name="quantity" type="number" value={jobData.quantity} onChange={handleChange} className={inputClasses} required />
+                    </div>
+                     <div>
+                        <label htmlFor="material" className="block font-semibold mb-1">Materiaal</label>
+                        <input id="material" name="material" type="text" value={jobData.material} onChange={handleChange} className={inputClasses} required />
+                    </div>
+                     <div>
+                        <label htmlFor="format" className="block font-semibold mb-1">Formaat (optioneel)</label>
+                        <input id="format" name="format" type="text" value={jobData.format || ''} onChange={handleChange} className={inputClasses} />
+                    </div>
+                    <div>
+                        <label htmlFor="deadline" className="block font-semibold mb-1">Deadline Opdracht</label>
+                        <input id="deadline" name="deadline" type="date" value={jobData.deadline} onChange={handleChange} className={inputClasses} required />
+                    </div>
+                     <div>
+                        <label htmlFor="quotingDeadline" className="block font-semibold mb-1">Deadline Offertes (optioneel)</label>
+                        <input id="quotingDeadline" name="quotingDeadline" type="date" value={jobData.quotingDeadline} onChange={handleChange} className={inputClasses} />
+                    </div>
                 </div>
+                <div className="pt-4 border-t">
+                    <div className="flex items-center">
+                        <input type="checkbox" name="isPublic" checked={jobData.isPublic} onChange={handleChange} id="isPublic" className="checkbox mr-3" />
+                        <label htmlFor="isPublic">Plaats deze opdracht ook openbaar op de Marktplaats</label>
+                    </div>
+                </div>
+                <button type="submit" disabled={isSubmitting} className="w-full btn btn-primary disabled:opacity-50">
+                    {isSubmitting ? 'Bezig met opslaan...' : 'Wijzigingen Opslaan'}
+                </button>
             </form>
         </div>
     );

@@ -1,51 +1,59 @@
-// src/components/MyProductions.jsx - Opgeschoonde versie
+// src/components/MyProductions.jsx
 
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
-import StatusBadge from './StatusBadge';
 
-const MyProductions = ({ navigateTo, showNotification }) => {
-    const [jobs, setJobs] = useState([]);
-    const [loading, setLoading] = useState(true);
+const MyProductions = ({ showNotification, currentUser, navigateTo }) => {
+    const [productions, setProductions] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchJobs = async () => {
-            // Zet laden hier expliciet aan, mocht de component opnieuw laden
-            setLoading(true); 
+        const fetchProductions = async () => {
+            setIsLoading(true);
             try {
-                const data = await apiRequest('/jobs/production');
-                setJobs(data);
+                const data = await apiRequest('/productions/my-productions');
+                setProductions(data);
             } catch (error) {
                 showNotification(error.message, 'error');
             } finally {
-                // Zet het laden altijd uit, of het nu slaagt of faalt
-                setLoading(false); 
+                setIsLoading(false);
             }
         };
-        
-        fetchJobs();
-    }, [showNotification]); // Dependency array voor consistentie
+        if (currentUser) {
+            fetchProductions();
+        }
+    }, [currentUser, showNotification]);
 
-    if (loading) return <p>Productie-opdrachten laden...</p>;
+    if (isLoading) return <div className="text-center p-10">Producties laden...</div>;
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold text-slate-800 mb-6">Mijn Productie-opdrachten</h2>
-            {jobs.length === 0 ? (<p>U heeft momenteel geen opdrachten in productie.</p>) : (
-                <div className="space-y-6">
-                    {jobs.map(job => (
-                        <div key={job.id} className="card card-clickable" onClick={() => navigateTo('production-details', job.id)}>
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <h3 className="text-xl font-bold text-slate-900">{job.title}</h3>
-                                    <p className="text-sm text-slate-500 mt-1">
-                                        Klant: <span className="font-medium text-slate-700">{job.customerName || 'Onbekend'}</span>
-                                    </p>
+        <div className="container mx-auto">
+            <div className="flex justify-between items-center mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold">Mijn Producties</h1>
+                    <p className="text-base-content/70 mt-2">Hier vindt u een overzicht van alle opdrachten die u in productie heeft.</p>
+                </div>
+                <button onClick={() => navigateTo('production-kanban')} className="btn btn-secondary">
+                    Toon Kanban Bord
+                </button>
+            </div>
+
+            {productions.length === 0 ? (
+                <div className="card bg-base-100 text-center p-10"><p>U heeft momenteel geen opdrachten in productie.</p></div>
+            ) : (
+                <div className="space-y-4">
+                    {productions.map(job => (
+                        <div 
+                            key={job.id} 
+                            onClick={() => navigateTo('production-details', job.id)}
+                            className="card bg-base-100 shadow-md hover:shadow-xl cursor-pointer transition-shadow"
+                        >
+                            <div className="card-body">
+                                <h2 className="card-title">{job.title}</h2>
+                                <div className="flex items-center space-x-4 text-sm text-base-content/70 mt-2">
+                                    <span><strong>Klant:</strong> {job.customer.bedrijfsnaam}</span>
+                                    <span><strong>Status:</strong> {job.status}</span>
                                 </div>
-                                <StatusBadge status={job.status} />
-                            </div>
-                            <div className="text-right mt-4 text-sm font-semibold text-blue-600">
-                                Beheer Productie →
                             </div>
                         </div>
                     ))}

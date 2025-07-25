@@ -1,130 +1,107 @@
+// src/components/ProductionJobDetails.jsx
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiRequest } from '../api';
-import StatusBadge from './StatusBadge';
 
-const ProductionJobDetails = ({ jobId, navigateTo, showNotification }) => {
+const ProductionJobDetails = ({ showNotification, navigateTo, viewParam: jobId, currentUser }) => {
     const [job, setJob] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    // Nieuwe state voor het toevoegen van een stap
     const [newStepTitle, setNewStepTitle] = useState('');
 
-    const fetchJob = useCallback(async () => {
-        if (!jobId) {
-            setLoading(false);
-            return;
-        }
+    const fetchDetails = useCallback(async () => {
+        // We zetten de loading state niet opnieuw, om flikkeren te voorkomen bij updates
         try {
-            const data = await apiRequest(`/jobs/${jobId}`);
+            const data = await apiRequest(`/jobs/${jobId}`, 'GET');
             setJob(data);
         } catch (error) {
             showNotification(error.message, 'error');
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     }, [jobId, showNotification]);
 
     useEffect(() => {
-        fetchJob();
-    }, [fetchJob]);
+        if (currentUser && jobId) {
+            fetchDetails();
+        }
+    }, [currentUser, jobId, fetchDetails]);
 
-    const handleDataRefresh = async () => {
+    const handleStatusChange = async (stepId, newStatus) => {
         try {
-            const data = await apiRequest(`/jobs/${jobId}`);
-            setJob(data);
+            await apiRequest(`/productions/steps/${stepId}`, 'PUT', { status: newStatus });
+            showNotification('Status succesvol bijgewerkt.');
+            fetchDetails(); // Herlaad de details om de wijziging te zien
         } catch (error) {
-            showNotification('Kon de laatste data niet ophalen.', 'error');
+            showNotification(error.message, 'error');
         }
     };
 
-    const handleStatusUpdate = async (stepId, newStatus) => {
+    // NIEUWE FUNCTIE: Voegt een nieuwe stap toe
+    const handleAddStep = async (e) => {
+        e.preventDefault();
+        if (!newStepTitle.trim()) {
+            showNotification('Vul een titel in voor de stap.', 'warn');
+            return;
+        }
         try {
-            await apiRequest(`/steps/${stepId}`, 'PUT', { status: newStatus });
-            handleDataRefresh();
+            const newOrder = job.productionSteps.length + 1;
+            await apiRequest(`/productions/${jobId}/steps`, 'POST', { title: newStepTitle, order: newOrder });
+            showNotification('Productiestap succesvol toegevoegd.');
+            setNewStepTitle(''); // Maak het invoerveld leeg
+            fetchDetails(); // Herlaad de details
         } catch (error) {
             showNotification(error.message, 'error');
         }
     };
     
-    const handleAddStep = async (e) => {
-        e.preventDefault();
-        if (!newStepTitle) return;
-        const newOrder = (job.productionSteps?.length || 0) + 1;
-        try {
-            await apiRequest(`/jobs/${jobId}/steps`, 'POST', { title: newStepTitle, order: newOrder });
-            setNewStepTitle('');
-            handleDataRefresh();
-        } catch (error) {
-            showNotification(error.message, 'error');
-        }
-    };
-
-    const handleJobCompleted = async () => {
-        if (window.confirm('Weet je zeker dat je deze opdracht wilt markeren als voltooid?')) {
-            try {
-                await apiRequest(`/jobs/${jobId}/status`, 'PUT', { status: 'completed' });
-                showNotification('Opdracht voltooid!', 'success');
-                handleDataRefresh();
-            } catch (error) {
-                showNotification(error.message, 'error');
-            }
-        }
-    };
-
-    if (loading) return <p>Opdrachtdetails laden...</p>;
-    if (!job) return <p>Kon opdracht niet vinden.</p>;
+    if (isLoading) return <div className="text-center p-10">Productiedetails laden...</div>;
+    if (!job) return <div className="text-center p-10">Productie niet gevonden.</div>;
 
     return (
-        <div>
-            <button onClick={() => navigateTo('my-productions')} className="btn btn-secondary mb-6">← Terug naar producties</button>
-            <div className="card">
-                 <div className="flex justify-between items-start">
-                    <h2 className="text-2xl font-bold mb-4">{job.title}</h2>
-                    <StatusBadge status={job.status} />
-                </div>
-                <p className="text-gray-600 mb-4 whitespace-pre-wrap">{job.description}</p>
-                 <p className="mt-4 text-sm text-gray-500">
-                    Klant: <span className="font-medium">{job.customer?.bedrijfsnaam || 'Onbekend'}</span>
-                </p>
-            </div>
+        <div className="container mx-auto">
+            <h1 className="text-3xl font-bold mb-2">Productieplanning: {job.title}</h1>
+            <p className="text-base-content/70 mb-6">Klant: {job.customer.bedrijfsnaam}</p>
 
-            <div className="mt-8">
-                <h2 className="text-2xl font-bold mb-4">Productie Planning</h2>
-                <div className="card space-y-4">
-                    {job.productionSteps && job.productionSteps.length > 0 ? (
-                        job.productionSteps.map(step => (
-                            <div key={step.id} className="flex justify-between items-center p-2 rounded-md hover:bg-slate-50">
-                                <div>
-                                    <p className="font-semibold text-slate-800">{step.title}</p>
-                                    <p className="text-sm text-slate-500 capitalize">{step.status.replace('_', ' ')}</p>
+            <div className="card bg-base-100 shadow-xl">
+                <div className="card-body">
+                    <h2 className="card-title">Productiestappen</h2>
+                    <div className="space-y-4">
+                        {job.productionSteps.length > 0 ? (
+                            job.productionSteps.map(step => (
+                                <div key={step.id} className="flex items-center justify-between p-2 border rounded-md">
+                                    <span>{step.title}</span>
+                                    <div className="dropdown dropdown-end">
+                                        <label tabIndex={0} className="btn btn-sm m-1">{step.status}</label>
+                                        <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
+                                            <li><a onClick={() => handleStatusChange(step.id, 'pending')}>Wachtend</a></li>
+                                            <li><a onClick={() => handleStatusChange(step.id, 'in_progress')}>In Uitvoering</a></li>
+                                            <li><a onClick={() => handleStatusChange(step.id, 'completed')}>Voltooid</a></li>
+                                        </ul>
+                                    </div>
                                 </div>
-                                <div className="flex gap-2">
-                                    <button disabled={step.status === 'in_progress'} onClick={() => handleStatusUpdate(step.id, 'in_progress')} className="btn btn-secondary text-xs">Start</button>
-                                    <button disabled={step.status === 'completed'} onClick={() => handleStatusUpdate(step.id, 'completed')} className="btn btn-primary text-xs">Voltooi</button>
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p>Nog geen stappen toegevoegd aan de planning.</p>
-                    )}
+                            ))
+                        ) : (
+                            <p className="text-base-content/50">Er zijn nog geen productiestappen aangemaakt voor deze opdracht.</p>
+                        )}
+                    </div>
+
+                    {/* --- NIEUW FORMULIER OM STAPPEN TOE TE VOEGEN --- */}
+                    <div className="border-t pt-6 mt-6">
+                        <h3 className="font-semibold mb-2">Nieuwe Stap Toevoegen</h3>
+                        <form onSubmit={handleAddStep} className="flex items-center space-x-2">
+                            <input 
+                                type="text" 
+                                placeholder="bv. Drukken, Afwerking, Transport" 
+                                className="input input-bordered w-full"
+                                value={newStepTitle}
+                                onChange={(e) => setNewStepTitle(e.target.value)}
+                            />
+                            <button type="submit" className="btn btn-primary">Toevoegen</button>
+                        </form>
+                    </div>
                 </div>
-                 <form onSubmit={handleAddStep} className="card mt-4 flex gap-4">
-                    <input 
-                        type="text" 
-                        value={newStepTitle} 
-                        onChange={(e) => setNewStepTitle(e.target.value)}
-                        placeholder="Nieuwe productiestap toevoegen..."
-                        className="w-full p-2 border rounded-md"
-                    />
-                    <button type="submit" className="btn btn-primary">Voeg toe</button>
-                </form>
             </div>
-            
-            {job.status === 'in_production' && (
-                <div className="mt-8 card text-center">
-                    <h3 className="text-lg font-semibold mb-2">Opdracht Afronden</h3>
-                    <p className="text-slate-600 mb-4">Als alle productiestappen zijn voltooid, markeer de opdracht dan als afgerond.</p>
-                    <button onClick={handleJobCompleted} className="btn btn-primary bg-green-600 hover:bg-green-700">Markeer als Voltooi</button>
-                </div>
-            )}
         </div>
     );
 };

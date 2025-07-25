@@ -1,58 +1,53 @@
-// src/components/AdminDashboard.jsx - Gecorrigeerde versie
-
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
-import UserManagement from './UserManagement';
 
-// Een kleine, herbruikbare component voor een statistiek-kaart
-const StatCard = ({ title, value }) => (
-    <div className="bg-white p-6 rounded-lg shadow border border-slate-200">
-        <h3 className="text-sm font-medium text-slate-500">{title}</h3>
-        <p className="mt-1 text-3xl font-semibold text-slate-900">{value}</p>
-    </div>
-);
-
-const AdminDashboard = ({ showNotification }) => {
+const AdminDashboard = ({ currentUser, navigateTo, showNotification, handleLogout }) => {
     const [stats, setStats] = useState(null);
-    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                // DE AANPASSING ZIT HIER: '/api' is verwijderd
-                const data = await apiRequest('/admin/stats');
+                const data = await apiRequest('/admin/stats', 'GET');
                 setStats(data);
             } catch (error) {
-                showNotification('Kon dashboard statistieken niet laden', 'error');
-            } finally {
-                setLoading(false);
+                showNotification(error.message, 'error');
             }
         };
-        fetchStats();
-    }, [showNotification]);
+        if (currentUser) {
+            fetchStats();
+        }
+    }, [currentUser, showNotification]);
 
     return (
-        <div>
-            <h2 className="text-3xl font-bold text-slate-800 mb-6">Admin Dashboard</h2>
-
-            {/* Sectie met statistieken */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {loading ? (
-                    <p>Statistieken laden...</p>
-                ) : stats ? (
-                    <>
-                        <StatCard title="Totaal Gebruikers" value={stats.userCount} />
-                        <StatCard title="Totaal Opdrachten" value={stats.jobCount} />
-                        <StatCard title="Totaal Aanbod" value={stats.offerCount} />
-                        <StatCard title="Opdrachten in Productie" value={stats.jobsInProduction} />
-                    </>
-                ) : (
-                    <p>Kon statistieken niet laden.</p>
-                )}
+        <div className="container mx-auto">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold">Admin Dashboard</h1>
             </div>
-
-            {/* Sectie voor gebruikersbeheer */}
-            <UserManagement showNotification={showNotification} />
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="card p-4 text-center">
+                    <p className="text-gray-500">Totaal Bedrijven</p>
+                    <p className="text-3xl font-bold">{stats ? stats.companyCount : '...'}</p>
+                </div>
+                <div className="card p-4 text-center">
+                    <p className="text-gray-500">Totaal Opdrachten</p>
+                    <p className="text-3xl font-bold">{stats ? stats.jobCount : '...'}</p>
+                </div>
+                <div className="card p-4 text-center bg-yellow-100 border border-yellow-300">
+                    <p className="text-yellow-800">Wachtend op Goedkeuring</p>
+                    <p className="text-3xl font-bold text-yellow-900">{stats ? stats.pendingUsers : '...'}</p>
+                </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div onClick={() => navigateTo('user-management')} className="card p-6 text-center hover:bg-gray-100 cursor-pointer">
+                    <h2 className="font-bold text-xl">Gebruikersbeheer</h2>
+                    <p className="text-sm mt-2">Bekijk en keur individuele gebruikersaccounts goed.</p>
+                </div>
+                 <div onClick={() => navigateTo('company-management')} className="card p-6 text-center hover:bg-gray-100 cursor-pointer">
+                    <h2 className="font-bold text-xl">Bedrijvenbeheer</h2>
+                    <p className="text-sm mt-2">Bekijk de details van alle geregistreerde bedrijven.</p>
+                </div>
+            </div>
         </div>
     );
 };

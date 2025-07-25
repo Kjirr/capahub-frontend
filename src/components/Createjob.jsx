@@ -1,42 +1,90 @@
+// src/components/CreateJob.jsx
+
 import React, { useState } from 'react';
 import { apiRequest } from '../api';
 
-const CreateJob = ({ navigateTo, showNotification }) => {
-    const [formData, setFormData] = useState({ title: '', description: '', format: '', quantity: '', material: '', deadline: '', location: '' });
+const DESCRIPTION_MAX_LENGTH = 500;
+
+const CreateJob = ({ showNotification, navigateTo }) => {
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [quantity, setQuantity] = useState(1000);
+    const [material, setMaterial] = useState('');
+    const [format, setFormat] = useState('');
     const [isPublic, setIsPublic] = useState(false);
+    const [deadline, setDeadline] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await apiRequest('/jobs', 'POST', { ...formData, isPublic });
-            showNotification('Opdracht succesvol geplaatst!');
-            navigateTo('my-jobs');
-        } catch (error) {
-            showNotification(error.message, 'error');
+    const handleDescriptionChange = (e) => {
+        if (e.target.value.length <= DESCRIPTION_MAX_LENGTH) {
+            setDescription(e.target.value);
         }
     };
 
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            const jobData = { title, description, quantity: Number(quantity), material, format, isPublic, deadline };
+            await apiRequest('/jobs', 'POST', jobData);
+            showNotification('Opdracht succesvol aangemaakt!');
+            navigateTo('my-jobs');
+        } catch (error) {
+            showNotification(error.message, 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    // Dit is de nieuwe, correcte styling voor de invoervelden
+    const inputClasses = "w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500";
+
     return (
         <div className="max-w-2xl mx-auto">
-            <form onSubmit={handleSubmit} className="card">
-                <h2 className="text-2xl font-bold text-center mb-6">Plaats een nieuwe drukwerkopdracht</h2>
+            <h1 className="text-3xl font-bold mb-6">Nieuwe Opdracht Plaatsen</h1>
+            <form onSubmit={handleSubmit} className="card p-6 space-y-6">
+                
                 <div className="space-y-4">
-                    <div><label className="block text-gray-700 mb-2">Titel van de opdracht*</label><input type="text" name="title" value={formData.title} onChange={handleChange} placeholder="bv. Flyers voor evenement" className="w-full p-2 border rounded-md" required /></div>
-                    <div><label className="block text-gray-700 mb-2">Omschrijving*</label><textarea name="description" value={formData.description} onChange={handleChange} placeholder="Geef een duidelijke omschrijving..." className="w-full p-2 border rounded-md" required /></div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label className="block text-gray-700 mb-2">Oplage*</label><input type="number" name="quantity" value={formData.quantity} onChange={handleChange} placeholder="bv. 5000" className="w-full p-2 border rounded-md" required /></div>
-                        <div><label className="block text-gray-700 mb-2">Materiaal*</label><input type="text" name="material" value={formData.material} onChange={handleChange} placeholder="bv. karton" className="w-full p-2 border rounded-md" required /></div>
+                    <div>
+                        <label htmlFor="title" className="block font-semibold mb-1">Titel</label>
+                        <input id="title" type="text" value={title} onChange={e => setTitle(e.target.value)} className={inputClasses} required />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label className="block text-gray-700 mb-2">Formaat</label><input type="text" name="format" value={formData.format} onChange={handleChange} placeholder="bv. A4" className="w-full p-2 border rounded-md" /></div>
-                        <div><label className="block text-gray-700 mb-2">Gewenste deadline (optioneel)</label><input type="date" name="deadline" value={formData.deadline} onChange={handleChange} className="w-full p-2 border rounded-md" /></div>
+                    <div>
+                        <label htmlFor="description" className="block font-semibold mb-1">Omschrijving</label>
+                        <textarea id="description" value={description} onChange={handleDescriptionChange} className={inputClasses} rows="5" required></textarea>
+                        <p className="text-right text-sm text-gray-500 mt-1">{description.length}/{DESCRIPTION_MAX_LENGTH}</p>
                     </div>
-                    <div><label className="block text-gray-700 mb-2">Gewenste plaats productie (optioneel)</label><input type="text" name="location" value={formData.location} onChange={handleChange} placeholder="bv. Amsterdam" className="w-full p-2 border rounded-md" /></div>
-                    <div className="mt-4 pt-4 border-t"><label className="flex items-center"><input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} className="h-4 w-4 text-gray-600 border-gray-300 rounded" /><span className="ml-2 text-gray-700">Plaats deze opdracht ook openbaar op de Marktplaats</span></label><p className="text-sm text-gray-500 mt-1">Indien aangevinkt, is uw opdracht zichtbaar voor alle drukkerijen.</p></div>
                 </div>
-                <div className="flex justify-end gap-4 mt-6"><button type="button" onClick={() => navigateTo('dashboard')} className="btn btn-secondary">Annuleren</button><button type="submit" className="btn btn-primary">Plaats Opdracht</button></div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                    <div>
+                        <label htmlFor="quantity" className="block font-semibold mb-1">Oplage</label>
+                        <input id="quantity" type="number" value={quantity} onChange={e => setQuantity(e.target.value)} className={inputClasses} required />
+                    </div>
+                     <div>
+                        <label htmlFor="material" className="block font-semibold mb-1">Materiaal</label>
+                        <input id="material" type="text" value={material} onChange={e => setMaterial(e.target.value)} className={inputClasses} required />
+                    </div>
+                     <div>
+                        <label htmlFor="format" className="block font-semibold mb-1">Formaat (optioneel)</label>
+                        <input id="format" type="text" value={format} onChange={e => setFormat(e.target.value)} className={inputClasses} />
+                    </div>
+                    <div>
+                        <label htmlFor="deadline" className="block font-semibold mb-1">Deadline</label>
+                        <input id="deadline" type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className={inputClasses} required />
+                    </div>
+                </div>
+                
+                <div className="pt-4 border-t">
+                    <div className="flex items-center">
+                        <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} id="isPublic" className="checkbox mr-3" />
+                        <label htmlFor="isPublic">Plaats deze opdracht ook openbaar op de Marktplaats</label>
+                    </div>
+                </div>
+
+                <button type="submit" disabled={isSubmitting} className="w-full btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+                  {isSubmitting ? 'Bezig met plaatsen...' : 'Opdracht Plaatsen'}
+                </button>
             </form>
         </div>
     );
