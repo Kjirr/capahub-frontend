@@ -55,17 +55,17 @@ const ProductionJobDetails = ({ showNotification, navigateTo, viewParam: jobId, 
         }
     };
     
-    if (isLoading) return <div className="text-center p-10">Productiedetails laden...</div>;
-    if (!job) return <div className="text-center p-10">Productie niet gevonden.</div>;
+    if (isLoading) return <div className="loading-text">Productiedetails laden...</div>;
+    if (!job) return <div className="loading-text">Productie niet gevonden.</div>;
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
             <h1 className="text-3xl font-bold mb-2">Productieplanning: {job.title}</h1>
             <p className="text-base-content/70 mb-6">Klant: {job.customer.bedrijfsnaam}</p>
 
             <div className="card bg-base-100 shadow-xl">
                 <div className="card-body">
-                    <h2 className="card-title">Productiestappen</h2>
+                    <h2 className="card-title-lg">Productiestappen</h2>
                     <div className="space-y-4">
                         {job.productionSteps.length > 0 ? (
                             job.productionSteps.map(step => (
@@ -93,11 +93,11 @@ const ProductionJobDetails = ({ showNotification, navigateTo, viewParam: jobId, 
                             <input 
                                 type="text" 
                                 placeholder="bv. Drukken, Afwerking, Transport" 
-                                className="input input-bordered w-full"
+                                className="form-input"
                                 value={newStepTitle}
                                 onChange={(e) => setNewStepTitle(e.target.value)}
                             />
-                            <button type="submit" className="btn btn-primary">Toevoegen</button>
+                            <button type="submit" className="btn-primary">Toevoegen</button>
                         </form>
                     </div>
                 </div>

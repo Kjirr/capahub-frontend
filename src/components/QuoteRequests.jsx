@@ -38,17 +38,17 @@ const QuoteRequests = ({ showNotification, navigateTo, currentUser }) => {
         }
     };
 
-    if (isLoading) return <div className="text-center p-10">Offerteaanvragen laden...</div>;
+    if (isLoading) return <div className="loading-text">Offerteaanvragen laden...</div>;
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold">Gedeelde Werkbak: Offerteaanvragen</h1>
-                <p className="text-base-content/70 mt-2">Dit zijn de openbare opdrachten die wachten op een offerte.</p>
+                <h1 className="page-title">Gedeelde Werkbak: Offerteaanvragen</h1>
+                <p className="page-subtitle">Dit zijn de openbare opdrachten die wachten op een offerte.</p>
             </div>
 
             {requests.length === 0 ? (
-                <div className="card bg-base-100 text-center p-10">
+                <div className="card-placeholder">
                     <p>Er zijn momenteel geen nieuwe offerteaanvragen.</p>
                 </div>
             ) : (
@@ -57,11 +57,11 @@ const QuoteRequests = ({ showNotification, navigateTo, currentUser }) => {
                         <div key={job.id} className="card bg-base-100 shadow-md">
                             <div className="card-body flex-row justify-between items-center">
                                 <div>
-                                    <h2 className="card-title">{job.title}</h2>
+                                    <h2 className="card-title-lg">{job.title}</h2>
                                     <p className="text-sm text-base-content/70">Klant: {job.company.name}</p>
                                 </div>
                                 <div className="card-actions">
-                                    <button onClick={() => handleAssign(job.id)} className="btn btn-primary">
+                                    <button onClick={() => handleAssign(job.id)} className="btn-primary">
                                         Toewijzen & Offerte maken
                                     </button>
                                 </div>

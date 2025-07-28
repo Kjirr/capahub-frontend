@@ -27,17 +27,17 @@ const MyJobs = ({ showNotification, navigateTo, currentUser }) => {
     }, [currentUser, showNotification]);
 
     if (isLoading) {
-        return <div className="text-center p-10">Mijn opdrachten laden...</div>;
+        return <div className="loading-text">Mijn opdrachten laden...</div>;
     }
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold">Mijn Opdrachten</h1>
-                    <p className="text-base-content/70 mt-2">Hier vindt u een overzicht van alle opdrachten die u heeft geplaatst.</p>
+                    <h1 className="page-title">Mijn Opdrachten</h1>
+                    <p className="page-subtitle">Hier vindt u een overzicht van alle opdrachten die u heeft geplaatst.</p>
                 </div>
-                <button onClick={() => navigateTo('create-job')} className="btn btn-primary">
+                <button onClick={() => navigateTo('create-job')} className="btn-primary">
                     Nieuwe Opdracht Plaatsen
                 </button>
             </div>
@@ -52,11 +52,11 @@ const MyJobs = ({ showNotification, navigateTo, currentUser }) => {
                         <div 
                             key={job.id} 
                             onClick={() => navigateTo('job-details', job.id)} 
-                            className="card bg-base-100 shadow-md hover:shadow-xl cursor-pointer transition-shadow"
+                            className="card-interactive"
                         >
                             <div className="card-body flex-row justify-between items-center">
                                 <div>
-                                    <h2 className="card-title">{job.title}</h2>
+                                    <h2 className="card-title-lg">{job.title}</h2>
                                     <div className="flex items-center space-x-4 text-sm text-base-content/70 mt-2">
                                         <span><strong>Status:</strong> {job.status}</span>
                                         <span><strong>Geplaatst op:</strong> {new Date(job.createdAt).toLocaleDateString()}</span>

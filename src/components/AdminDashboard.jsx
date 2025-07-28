@@ -19,19 +19,19 @@ const AdminDashboard = ({ currentUser, navigateTo, showNotification, handleLogou
     }, [currentUser, showNotification]);
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+                <h1 className="page-title">Admin Dashboard</h1>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div className="card p-4 text-center">
                     <p className="text-gray-500">Totaal Bedrijven</p>
-                    <p className="text-3xl font-bold">{stats ? stats.companyCount : '...'}</p>
+                    <p className="page-title">{stats ? stats.companyCount : '...'}</p>
                 </div>
                 <div className="card p-4 text-center">
                     <p className="text-gray-500">Totaal Opdrachten</p>
-                    <p className="text-3xl font-bold">{stats ? stats.jobCount : '...'}</p>
+                    <p className="page-title">{stats ? stats.jobCount : '...'}</p>
                 </div>
                 <div className="card p-4 text-center bg-yellow-100 border border-yellow-300">
                     <p className="text-yellow-800">Wachtend op Goedkeuring</p>

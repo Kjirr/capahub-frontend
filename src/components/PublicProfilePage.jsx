@@ -28,7 +28,7 @@ const PublicProfilePage = ({ userId, showNotification, navigateTo }) => {
         <div>
             <button onClick={() => window.history.back()} className="btn btn-secondary mb-6">← Terug</button>
             <div className="card">
-                <h2 className="text-3xl font-bold">{profile.bedrijfsnaam}</h2>
+                <h2 className="page-title">{profile.bedrijfsnaam}</h2>
                 <p className="text-lg text-gray-600 mb-6">{profile.plaats}</p>
                 <div className="flex items-center gap-2 mb-6">
                     <StarRating rating={Math.round(profile.averageRating)} /> 

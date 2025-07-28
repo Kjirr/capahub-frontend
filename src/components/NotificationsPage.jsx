@@ -37,11 +37,11 @@ const NotificationsPage = ({ showNotification, currentUser }) => {
         }
     };
 
-    if (isLoading) return <div className="text-center p-10">Notificaties laden...</div>;
+    if (isLoading) return <div className="loading-text">Notificaties laden...</div>;
 
     return (
         <div className="container mx-auto max-w-2xl">
-            <h1 className="text-3xl font-bold mb-6">Notificaties</h1>
+            <h1 className="page-title mb-6">Notificaties</h1>
             <div className="card bg-base-100 shadow-xl">
                 <div className="card-body p-0">
                     {notifications.length === 0 ? (
@@ -64,7 +64,7 @@ const NotificationsPage = ({ showNotification, currentUser }) => {
                                     {!notification.isRead && (
                                         <button 
                                             onClick={() => handleMarkAsRead(notification.id)}
-                                            className="btn btn-ghost btn-sm"
+                                            className="btn-ghost btn-sm"
                                         >
                                             Markeer als gelezen
                                         </button>

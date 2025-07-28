@@ -23,12 +23,12 @@ const InviteModal = ({ isOpen, onClose, onInvite, showNotification }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
             <div className="card bg-base-100 shadow-xl w-full max-w-md">
                 <div className="card-body">
-                    <h2 className="card-title">Nieuw Teamlid Uitnodigen</h2>
-                    <input type="text" placeholder="Volledige naam" value={name} onChange={e => setName(e.target.value)} className="input input-bordered w-full mt-4" />
-                    <input type="email" placeholder="E-mailadres" value={email} onChange={e => setEmail(e.target.value)} className="input input-bordered w-full mt-4" />
+                    <h2 className="card-title-lg">Nieuw Teamlid Uitnodigen</h2>
+                    <input type="text" placeholder="Volledige naam" value={name} onChange={e => setName(e.target.value)} className="form-input mt-4" />
+                    <input type="email" placeholder="E-mailadres" value={email} onChange={e => setEmail(e.target.value)} className="form-input mt-4" />
                     <div className="card-actions justify-end mt-6">
-                        <button onClick={onClose} className="btn btn-ghost">Annuleren</button>
-                        <button onClick={handleSubmit} className="btn btn-primary">Verstuur Uitnodiging</button>
+                        <button onClick={onClose} className="btn-ghost">Annuleren</button>
+                        <button onClick={handleSubmit} className="btn-primary">Verstuur Uitnodiging</button>
                     </div>
                 </div>
             </div>
@@ -69,17 +69,17 @@ const TeamManagement = ({ currentUser, showNotification }) => {
         }
     };
 
-    if (isLoading) return <div className="text-center p-10">Team laden...</div>;
+    if (isLoading) return <div className="loading-text">Team laden...</div>;
 
     return (
         <>
-            <div className="container mx-auto">
-                <h1 className="text-3xl font-bold mb-6">Team Beheer</h1>
+            <div className="page-container">
+                <h1 className="page-title mb-6">Team Beheer</h1>
                 <div className="card bg-base-100 shadow-xl">
                     <div className="card-body">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="card-title">Teamleden</h2>
-                            <button onClick={() => setIsModalOpen(true)} className="btn btn-primary btn-sm">Nieuw Lid Uitnodigen</button>
+                            <h2 className="card-title-lg">Teamleden</h2>
+                            <button onClick={() => setIsModalOpen(true)} className="btn-primary btn-sm">Nieuw Lid Uitnodigen</button>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="table w-full">
@@ -96,7 +96,7 @@ const TeamManagement = ({ currentUser, showNotification }) => {
                                         <tr key={member.id} className="hover">
                                             <td>{member.name}</td>
                                             <td>{member.email}</td>
-                                            <td><span className="badge badge-ghost">{member.companyRole}</span></td>
+                                            <td><span className="badge-ghost">{member.companyRole}</span></td>
                                             <td><span className={`badge ${member.status === 'active' ? 'badge-success' : 'badge-warning'}`}>{member.status}</span></td>
                                         </tr>
                                     ))}

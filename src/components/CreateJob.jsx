@@ -40,17 +40,17 @@ const CreateJob = ({ showNotification, navigateTo }) => {
     const inputClasses = "w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500";
 
     return (
-        <div className="max-w-2xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6">Nieuwe Opdracht Plaatsen</h1>
+        <div className="form-container">
+            <h1 className="page-title mb-6">Nieuwe Opdracht Plaatsen</h1>
             <form onSubmit={handleSubmit} className="card p-6 space-y-6">
                 
                 <div className="space-y-4">
                     <div>
-                        <label htmlFor="title" className="block font-semibold mb-1">Titel</label>
+                        <label htmlFor="title" className="form-label">Titel</label>
                         <input id="title" type="text" value={title} onChange={e => setTitle(e.target.value)} className={inputClasses} required />
                     </div>
                     <div>
-                        <label htmlFor="description" className="block font-semibold mb-1">Omschrijving</label>
+                        <label htmlFor="description" className="form-label">Omschrijving</label>
                         <textarea id="description" value={description} onChange={handleDescriptionChange} className={inputClasses} rows="5" required></textarea>
                         <p className="text-right text-sm text-gray-500 mt-1">{description.length}/{DESCRIPTION_MAX_LENGTH}</p>
                     </div>
@@ -58,19 +58,19 @@ const CreateJob = ({ showNotification, navigateTo }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
                     <div>
-                        <label htmlFor="quantity" className="block font-semibold mb-1">Oplage</label>
+                        <label htmlFor="quantity" className="form-label">Oplage</label>
                         <input id="quantity" type="number" value={quantity} onChange={e => setQuantity(e.target.value)} className={inputClasses} required />
                     </div>
                      <div>
-                        <label htmlFor="material" className="block font-semibold mb-1">Materiaal</label>
+                        <label htmlFor="material" className="form-label">Materiaal</label>
                         <input id="material" type="text" value={material} onChange={e => setMaterial(e.target.value)} className={inputClasses} required />
                     </div>
                      <div>
-                        <label htmlFor="format" className="block font-semibold mb-1">Formaat (optioneel)</label>
+                        <label htmlFor="format" className="form-label">Formaat (optioneel)</label>
                         <input id="format" type="text" value={format} onChange={e => setFormat(e.target.value)} className={inputClasses} />
                     </div>
                     <div>
-                        <label htmlFor="deadline" className="block font-semibold mb-1">Deadline</label>
+                        <label htmlFor="deadline" className="form-label">Deadline</label>
                         <input id="deadline" type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className={inputClasses} required />
                     </div>
                 </div>

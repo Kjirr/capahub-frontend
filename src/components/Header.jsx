@@ -1,3 +1,5 @@
+// src/components/Header.jsx
+
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
 
@@ -25,8 +27,8 @@ const Header = ({ isLoggedIn, currentUser, navigateTo, handleLogout }) => {
         if (!isLoggedIn) {
             return (
                 <div className="flex items-center space-x-2">
-                    <button onClick={() => navigateTo('login')} className="btn btn-ghost">Inloggen</button>
-                    <button onClick={() => navigateTo('register')} className="btn btn-primary">Registreren</button>
+                    <button onClick={() => navigateTo('login')} className="btn-ghost">Inloggen</button>
+                    <button onClick={() => navigateTo('register')} className="btn-primary">Registreren</button>
                 </div>
             );
         }
@@ -35,20 +37,20 @@ const Header = ({ isLoggedIn, currentUser, navigateTo, handleLogout }) => {
             return (
                 <div className="flex items-center space-x-4">
                     <span className="font-semibold">Admin Panel</span>
-                    <button onClick={() => navigateTo('admin-dashboard')} className="link">Dashboard</button>
-                    <button onClick={() => navigateTo('user-management')} className="link">Gebruikersbeheer</button>
-                    <button onClick={handleLogout} className="btn btn-ghost btn-sm">Uitloggen</button>
+                    <button onClick={() => navigateTo('admin-dashboard')} className="link-default">Dashboard</button>
+                    <button onClick={() => navigateTo('user-management')} className="link-default">Gebruikersbeheer</button>
+                    <button onClick={handleLogout} className="btn-ghost btn-sm">Uitloggen</button>
                 </div>
             );
         }
 
         return (
             <div className="flex items-center space-x-4">
-                <button onClick={() => navigateTo('dashboard')} className="link">Dashboard</button>
-                <button onClick={() => navigateTo('marketplace')} className="link">Marktplaats</button>
+                <button onClick={() => navigateTo('dashboard')} className="link-default">Dashboard</button>
+                <button onClick={() => navigateTo('marketplace')} className="link-default">Marktplaats</button>
                 
                 <div className="dropdown dropdown-end">
-                    <label tabIndex={0} className="btn btn-ghost">Mijn Werk</label>
+                    <label tabIndex={0} className="btn-ghost">Mijn Werk</label>
                     <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-4">
                         <li><a onClick={() => navigateTo('quote-requests')}>Offerteaanvragen</a></li>
                         <li><a onClick={() => navigateTo('my-tasks')}>Mijn Taken</a></li>
@@ -86,9 +88,13 @@ const Header = ({ isLoggedIn, currentUser, navigateTo, handleLogout }) => {
 
     return (
         <header className="bg-white shadow-sm sticky top-0 z-40">
-            <nav className="container mx-auto p-4 flex justify-between items-center">
-                <div className="text-2xl font-bold text-blue-600 cursor-pointer" onClick={() => navigateTo(isLoggedIn ? (currentUser.role === 'admin' ? 'admin-dashboard' : 'dashboard') : 'home')}>
-                    CapaPrint
+            <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
+                <div 
+                    className="cursor-pointer" 
+                    onClick={() => navigateTo(isLoggedIn ? (currentUser.role === 'admin' ? 'admin-dashboard' : 'dashboard') : 'home')}
+                >
+                    {/* Het logo is nu significant groter (h-24) */}
+                    <img src="/logo.png" alt="prntgo logo" className="h-24 w-auto" />
                 </div>
                 {renderUserMenu()}
             </nav>
@@ -97,5 +103,3 @@ const Header = ({ isLoggedIn, currentUser, navigateTo, handleLogout }) => {
 };
 
 export default Header;
-
-

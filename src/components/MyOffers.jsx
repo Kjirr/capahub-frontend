@@ -25,22 +25,22 @@ const MyOffers = ({ showNotification, navigateTo, currentUser }) => {
     }, [currentUser, showNotification]);
 
     if (isLoading) {
-        return <div className="text-center p-10">Aanbod laden...</div>;
+        return <div className="loading-text">Aanbod laden...</div>;
     }
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
             <div className="flex justify-between items-center mb-8">
                  <div>
-                    <h1 className="text-3xl font-bold">Mijn Aanbod</h1>
-                    <p className="text-base-content/70 mt-2">Hier beheert u uw aanbod van vrije capaciteit.</p>
+                    <h1 className="page-title">Mijn Aanbod</h1>
+                    <p className="page-subtitle">Hier beheert u uw aanbod van vrije capaciteit.</p>
                 </div>
-                <button onClick={() => navigateTo('create-offer')} className="btn btn-primary">
+                <button onClick={() => navigateTo('create-offer')} className="btn-primary">
                     Nieuw Aanbod Plaatsen
                 </button>
             </div>
             {offers.length === 0 ? (
-                 <div className="card bg-base-100 text-center p-10">
+                 <div className="card-placeholder">
                     <p>U heeft nog geen aanbod van vrije capaciteit geplaatst.</p>
                 </div>
             ) : (
@@ -49,10 +49,10 @@ const MyOffers = ({ showNotification, navigateTo, currentUser }) => {
                         <div 
                             key={offer.id} 
                             onClick={() => navigateTo('offer-details', offer.id)} 
-                            className="card bg-base-100 shadow-md hover:shadow-xl cursor-pointer transition-shadow"
+                            className="card-interactive"
                         >
                             <div className="card-body">
-                                <h2 className="card-title">{offer.machineType}</h2>
+                                <h2 className="card-title-lg">{offer.machineType}</h2>
                                 <div className="flex items-center space-x-4 text-sm text-base-content/70 mt-2">
                                     <span><strong>Materiaal:</strong> {offer.material}</span>
                                     <span><strong>Prijsindicatie:</strong> {offer.price}</span>

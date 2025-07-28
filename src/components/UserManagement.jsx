@@ -36,16 +36,16 @@ const UserManagement = ({ currentUser, showNotification, navigateTo }) => {
         }
     };
 
-    if (isLoading) return <div className="text-center p-10">Gebruikers laden...</div>;
+    if (isLoading) return <div className="loading-text">Gebruikers laden...</div>;
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold">Gebruikersbeheer</h1>
-                    <p className="text-base-content/70 mt-2">Bekijk en beheer alle gebruikersaccounts op het platform.</p>
+                    <h1 className="page-title">Gebruikersbeheer</h1>
+                    <p className="page-subtitle">Bekijk en beheer alle gebruikersaccounts op het platform.</p>
                 </div>
-                <button onClick={() => navigateTo('admin-dashboard')} className="btn btn-ghost">
+                <button onClick={() => navigateTo('admin-dashboard')} className="btn-ghost">
                     &larr; Terug naar Dashboard
                 </button>
             </div>
@@ -78,7 +78,7 @@ const UserManagement = ({ currentUser, showNotification, navigateTo }) => {
                                 <td>{new Date(user.createdAt).toLocaleString('nl-NL')}</td>
                                 <td>
                                     {user.status !== 'active' && (
-                                        <button onClick={() => handleApprove(user.id)} className="btn btn-primary btn-sm">
+                                        <button onClick={() => handleApprove(user.id)} className="btn-primary btn-sm">
                                             Goedkeuren
                                         </button>
                                     )}
@@ -88,7 +88,7 @@ const UserManagement = ({ currentUser, showNotification, navigateTo }) => {
                     </tbody>
                 </table>
                 {users.length === 0 && (
-                    <div className="text-center p-10">
+                    <div className="loading-text">
                         <p>Er zijn momenteel geen gebruikers gevonden.</p>
                     </div>
                 )}

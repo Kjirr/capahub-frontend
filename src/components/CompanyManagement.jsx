@@ -23,16 +23,16 @@ const CompanyManagement = ({ currentUser, showNotification, navigateTo }) => {
         }
     }, [currentUser, fetchCompanies]);
 
-    if (isLoading) return <div className="text-center p-10">Bedrijven laden...</div>;
+    if (isLoading) return <div className="loading-text">Bedrijven laden...</div>;
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold">Bedrijvenbeheer</h1>
-                    <p className="text-base-content/70 mt-2">Een overzicht van alle geregistreerde bedrijven op het platform.</p>
+                    <h1 className="page-title">Bedrijvenbeheer</h1>
+                    <p className="page-subtitle">Een overzicht van alle geregistreerde bedrijven op het platform.</p>
                 </div>
-                <button onClick={() => navigateTo('admin-dashboard')} className="btn btn-ghost">
+                <button onClick={() => navigateTo('admin-dashboard')} className="btn-ghost">
                     &larr; Terug naar Dashboard
                 </button>
             </div>
@@ -67,7 +67,7 @@ const CompanyManagement = ({ currentUser, showNotification, navigateTo }) => {
                     </tbody>
                 </table>
                  {companies.length === 0 && (
-                    <div className="text-center p-10">
+                    <div className="loading-text">
                         <p>Er zijn momenteel geen bedrijven gevonden.</p>
                     </div>
                 )}

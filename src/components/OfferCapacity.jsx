@@ -20,7 +20,7 @@ const OfferCapacity = ({ navigateTo, showNotification }) => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="form-container">
             <form onSubmit={handleSubmit} className="card">
                 <h2 className="text-2xl font-bold text-center mb-6">Bied Vrije Capaciteit Aan</h2>
                 <div className="mb-4">
@@ -43,8 +43,8 @@ const OfferCapacity = ({ navigateTo, showNotification }) => {
                     </div>
                 </div>
                 <div className="flex justify-end gap-4">
-                    <button type="button" onClick={() => navigateTo('dashboard')} className="btn btn-secondary">Annuleren</button>
-                    <button type="submit" className="btn btn-primary">Plaats Aanbod</button>
+                    <button type="button" onClick={() => navigateTo('dashboard')} className="btn-secondary">Annuleren</button>
+                    <button type="submit" className="btn-primary">Plaats Aanbod</button>
                 </div>
             </form>
         </div>

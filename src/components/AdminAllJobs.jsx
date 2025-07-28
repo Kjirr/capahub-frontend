@@ -42,9 +42,9 @@ const AdminAllJobs = ({ navigateTo, showNotification }) => {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-slate-800">Alle Opdrachten Beheren</h2>
-                <button onClick={() => navigateTo('admin-dashboard')} className="btn btn-secondary">← Terug naar Dashboard</button>
+                <button onClick={() => navigateTo('admin-dashboard')} className="btn-secondary">← Terug naar Dashboard</button>
             </div>
-            <div className="bg-white shadow rounded-lg border border-slate-200 overflow-x-auto">
+            <div className="table-container">
                 <table className="min-w-full divide-y divide-slate-200">
                     <thead className="bg-slate-50">
                         <tr>
@@ -61,8 +61,8 @@ const AdminAllJobs = ({ navigateTo, showNotification }) => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{job.customer.bedrijfsnaam}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500"><StatusBadge status={job.status} /></td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                                    <button onClick={() => navigateTo('job-details', job.id)} className="font-semibold text-blue-600 hover:text-blue-800">Bekijken</button>
-                                    <button onClick={() => handleDelete(job.id)} className="font-semibold text-red-600 hover:text-red-800">Verwijderen</button>
+                                    <button onClick={() => navigateTo('job-details', job.id)} className="btn-link">Bekijken</button>
+                                    <button onClick={() => handleDelete(job.id)} className="btn-link-danger">Verwijderen</button>
                                 </td>
                             </tr>
                         ))}

@@ -26,18 +26,18 @@ const Marketplace = ({ showNotification, navigateTo, currentUser }) => {
     }, [currentUser, showNotification]);
 
     if (isLoading) {
-        return <div className="text-center p-10">Marktplaats laden...</div>;
+        return <div className="loading-text">Marktplaats laden...</div>;
     }
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold">Marktplaats</h1>
-                <p className="text-base-content/70 mt-2">Hier vindt u alle openbare opdrachten waar u een offerte voor kunt indienen.</p>
+                <h1 className="page-title">Marktplaats</h1>
+                <p className="page-subtitle">Hier vindt u alle openbare opdrachten waar u een offerte voor kunt indienen.</p>
             </div>
             
             {publicJobs.length === 0 ? (
-                <div className="card bg-base-100 text-center p-10">
+                <div className="card-placeholder">
                     <p>Er zijn momenteel geen openbare opdrachten beschikbaar.</p>
                 </div>
             ) : (
@@ -46,10 +46,10 @@ const Marketplace = ({ showNotification, navigateTo, currentUser }) => {
                         <div 
                             key={job.id} 
                             onClick={() => navigateTo('job-details', job.id)}
-                            className="card bg-base-100 shadow-md hover:shadow-xl cursor-pointer transition-shadow"
+                            className="card-interactive"
                         >
                             <div className="card-body">
-                                <h2 className="card-title">{job.title}</h2>
+                                <h2 className="card-title-lg">{job.title}</h2>
                                 <div className="flex items-center space-x-4 text-sm text-base-content/70 mt-2">
                                     <span><strong>Oplage:</strong> {job.quantity}</span>
                                     <span><strong>Materiaal:</strong> {job.material}</span>

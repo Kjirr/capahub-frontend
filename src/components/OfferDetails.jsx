@@ -46,34 +46,34 @@ const EditOffer = ({ showNotification, navigateTo, viewParam: offerId, currentUs
     
     const inputClasses = "w-full p-2 border border-gray-300 rounded-md";
 
-    if (isLoading) return <div className="text-center p-10">Aanbod laden...</div>;
-    if (!offerData) return <div className="text-center p-10">Kon aanbod niet laden.</div>;
+    if (isLoading) return <div className="loading-text">Aanbod laden...</div>;
+    if (!offerData) return <div className="loading-text">Kon aanbod niet laden.</div>;
 
     return (
-        <div className="max-w-2xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6">Aanbod Bewerken</h1>
+        <div className="form-container">
+            <h1 className="page-title mb-6">Aanbod Bewerken</h1>
             <form onSubmit={handleSubmit} className="card p-6 space-y-6">
                 <div>
-                    <label htmlFor="machineType" className="block font-semibold mb-1">Machinetype</label>
+                    <label htmlFor="machineType" className="form-label">Machinetype</label>
                     <input id="machineType" name="machineType" type="text" value={offerData.machineType} onChange={handleChange} className={inputClasses} required />
                 </div>
                 <div>
-                    <label htmlFor="material" className="block font-semibold mb-1">Materiaal</label>
+                    <label htmlFor="material" className="form-label">Materiaal</label>
                     <input id="material" name="material" type="text" value={offerData.material} onChange={handleChange} className={inputClasses} required />
                 </div>
                 <div>
-                    <label htmlFor="location" className="block font-semibold mb-1">Locatie (optioneel)</label>
+                    <label htmlFor="location" className="form-label">Locatie (optioneel)</label>
                     <input id="location" name="location" type="text" value={offerData.location || ''} onChange={handleChange} className={inputClasses} />
                 </div>
                 <div>
-                    <label htmlFor="capacityDetails" className="block font-semibold mb-1">Details Capaciteit</label>
+                    <label htmlFor="capacityDetails" className="form-label">Details Capaciteit</label>
                     <textarea id="capacityDetails" name="capacityDetails" value={offerData.capacityDetails} onChange={handleChange} className={inputClasses} rows="4" required></textarea>
                 </div>
                 <div>
-                    <label htmlFor="price" className="block font-semibold mb-1">Prijsindicatie</label>
+                    <label htmlFor="price" className="form-label">Prijsindicatie</label>
                     <input id="price" name="price" type="text" value={offerData.price} onChange={handleChange} className={inputClasses} required />
                 </div>
-                <button type="submit" disabled={isSubmitting} className="w-full btn btn-primary">
+                <button type="submit" disabled={isSubmitting} className="w-full btn-primary">
                     {isSubmitting ? 'Bezig met opslaan...' : 'Wijzigingen Opslaan'}
                 </button>
             </form>

@@ -30,8 +30,8 @@ const JobDetails = ({ showNotification, navigateTo, viewParam: jobId, currentUse
     const handleConfirmDelete = async () => { /* ... uw bestaande delete logica ... */ };
     const handleAcceptQuote = async (quoteId) => { /* ... uw bestaande accept logica ... */ };
 
-    if (isLoading) return <div className="text-center p-10">Opdrachtdetails laden...</div>;
-    if (!job) return <div className="text-center p-10">Opdracht niet gevonden.</div>;
+    if (isLoading) return <div className="loading-text">Opdrachtdetails laden...</div>;
+    if (!job) return <div className="loading-text">Opdracht niet gevonden.</div>;
     
     const isOwner = currentUser?.userId === job.customerId;
 
@@ -39,14 +39,14 @@ const JobDetails = ({ showNotification, navigateTo, viewParam: jobId, currentUse
 
     return (
         <>
-            <div className="container mx-auto">
+            <div className="page-container">
                 {/* ... (uw bestaande titel sectie) ... */}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-2 space-y-6">
                         <div className="card bg-base-100 shadow-xl">
                             <div className="card-body">
-                                <h2 className="card-title">Opdrachtomschrijving</h2>
+                                <h2 className="card-title-lg">Opdrachtomschrijving</h2>
                                 <p className="whitespace-pre-wrap">{job.description}</p>
                             </div>
                         </div>
@@ -55,7 +55,7 @@ const JobDetails = ({ showNotification, navigateTo, viewParam: jobId, currentUse
                         {isOwner && job.status === 'in_production' && (
                             <div className="card bg-base-100 shadow-xl">
                                 <div className="card-body">
-                                    <h2 className="card-title">Productie Voortgang</h2>
+                                    <h2 className="card-title-lg">Productie Voortgang</h2>
                                     {job.productionSteps.length > 0 ? (
                                         <ul className="steps steps-vertical">
                                             {job.productionSteps.map(step => (
@@ -73,7 +73,7 @@ const JobDetails = ({ showNotification, navigateTo, viewParam: jobId, currentUse
 
                         <div className="card bg-base-100 shadow-xl">
                              <div className="card-body">
-                                <h2 className="card-title">Ingekomen Offertes ({job.quotes.length})</h2>
+                                <h2 className="card-title-lg">Ingekomen Offertes ({job.quotes.length})</h2>
                                 {/* ... (uw bestaande offertes-logica) ... */}
                             </div>
                         </div>

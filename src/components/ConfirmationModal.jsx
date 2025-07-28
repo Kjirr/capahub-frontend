@@ -19,13 +19,13 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, children }) => {
                 <div className="flex justify-end space-x-4">
                     <button 
                         onClick={onClose} 
-                        className="btn btn-secondary"
+                        className="btn-secondary"
                     >
                         Annuleren
                     </button>
                     <button 
                         onClick={onConfirm} 
-                        className="btn btn-danger"
+                        className="btn-danger"
                     >
                         Ja, verwijderen
                     </button>

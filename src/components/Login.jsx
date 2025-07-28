@@ -26,16 +26,16 @@ const Login = ({ handleLogin, navigateTo }) => {
     };
 
     return (
-        <div className="max-w-sm mx-auto mt-10">
-            <form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl p-8 space-y-4">
-                <h2 className="text-2xl font-bold text-center mb-4">Inloggen</h2>
+        <div className="auth-container">
+            <form onSubmit={handleSubmit} className="card-default p-8 space-y-4">
+                <h2 className="form-title">Inloggen</h2>
 
                 <input 
                     type="email" 
                     placeholder="E-mailadres" 
                     value={email} 
                     onChange={e => setEmail(e.target.value)} 
-                    className="input input-bordered w-full" 
+                    className="form-input" 
                     autoComplete="email" 
                     required 
                 />
@@ -44,13 +44,13 @@ const Login = ({ handleLogin, navigateTo }) => {
                     placeholder="Wachtwoord" 
                     value={password} 
                     onChange={e => setPassword(e.target.value)} 
-                    className="input input-bordered w-full" 
+                    className="form-input" 
                     autoComplete="current-password" 
                     required 
                 />
                 
-                <button type="submit" disabled={isSubmitting} className="w-full btn btn-primary">
-                    {isSubmitting ? <span className="loading loading-spinner"></span> : 'Login'}
+                <button type="submit" disabled={isSubmitting} className="w-full btn-primary">
+                    {isSubmitting ? <span className="loading-spinner"></span> : 'Login'}
                 </button>
                 
                 {/* De foutmelding is nu een strakke, rode tekst */}
@@ -61,7 +61,7 @@ const Login = ({ handleLogin, navigateTo }) => {
                 )}
                 
                 <p className="text-center text-sm text-gray-600 pt-2">
-                    Nog geen account? <span onClick={() => navigateTo('register')} className="font-semibold link link-primary">Registreer hier</span>
+                    Nog geen account? <span onClick={() => navigateTo('register')} className="font-semibold link-default">Registreer hier</span>
                 </p>
             </form>
         </div>

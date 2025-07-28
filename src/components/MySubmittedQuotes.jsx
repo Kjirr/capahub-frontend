@@ -25,18 +25,18 @@ const MySubmittedQuotes = ({ showNotification, currentUser, navigateTo }) => {
     }, [currentUser, showNotification]);
 
     if (isLoading) {
-        return <div className="text-center p-10">Ingediende offertes laden...</div>;
+        return <div className="loading-text">Ingediende offertes laden...</div>;
     }
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold">Mijn Ingediende Offertes</h1>
-                <p className="text-base-content/70 mt-2">Hier vindt u een overzicht van al uw uitgebrachte offertes.</p>
+                <h1 className="page-title">Mijn Ingediende Offertes</h1>
+                <p className="page-subtitle">Hier vindt u een overzicht van al uw uitgebrachte offertes.</p>
             </div>
             
             {quotes.length === 0 ? (
-                <div className="card bg-base-100 text-center p-10">
+                <div className="card-placeholder">
                     <p>U heeft nog geen offertes ingediend.</p>
                 </div>
             ) : (
@@ -45,12 +45,12 @@ const MySubmittedQuotes = ({ showNotification, currentUser, navigateTo }) => {
                         <div 
                             key={quote.id} 
                             onClick={() => navigateTo('edit-quote', quote.id)}
-                            className="card bg-base-100 shadow-md hover:shadow-xl cursor-pointer transition-shadow"
+                            className="card-interactive"
                         >
                             <div className="card-body">
                                 <div className="flex justify-between items-start">
-                                    <h2 className="card-title">Offerte voor: {quote.job?.title || 'Onbekende opdracht'}</h2>
-                                    <span className="badge badge-ghost">{quote.quoteNumber}</span>
+                                    <h2 className="card-title-lg">Offerte voor: {quote.job?.title || 'Onbekende opdracht'}</h2>
+                                    <span className="badge-ghost">{quote.quoteNumber}</span>
                                 </div>
                                 <div className="flex items-center space-x-4 text-sm text-base-content/70 mt-2">
                                     <span><strong>Uw Prijs:</strong> €{quote.price.toFixed(2)}</span>

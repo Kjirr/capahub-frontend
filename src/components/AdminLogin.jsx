@@ -65,13 +65,13 @@ const AdminLogin = ({ handleLogin, showNotification }) => {
     const inputClasses = "w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500";
 
     if (needsSetup === null) {
-        return <div className="text-center p-10">Status controleren...</div>;
+        return <div className="loading-text">Status controleren...</div>;
     }
 
     return (
         <div className="max-w-sm mx-auto mt-20">
             <form onSubmit={handleSubmit} className="card p-8 space-y-4">
-                <h2 className="text-2xl font-bold text-center mb-4">
+                <h2 className="form-title">
                     {needsSetup ? 'Admin Installatie' : 'Admin Login'}
                 </h2>
                 {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md text-center">{error}</div>}
@@ -83,7 +83,7 @@ const AdminLogin = ({ handleLogin, showNotification }) => {
                     <input name="secret" type="password" placeholder="Setup Sleutel" value={formData.secret} onChange={handleChange} className={inputClasses} required />
                 )}
 
-                <button type="submit" disabled={isSubmitting} className="w-full btn btn-primary disabled:opacity-50">
+                <button type="submit" disabled={isSubmitting} className="w-full btn-primary">
                     {isSubmitting ? 'Bezig...' : (needsSetup ? 'Installeren' : 'Inloggen')}
                 </button>
             </form>

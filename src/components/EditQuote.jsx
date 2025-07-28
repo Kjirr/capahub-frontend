@@ -40,15 +40,15 @@ const EditQuote = ({ showNotification, navigateTo, viewParam: quoteId, currentUs
         }
     };
 
-    if (!formData) return <div className="text-center p-10">Offerte laden...</div>;
+    if (!formData) return <div className="loading-text">Offerte laden...</div>;
 
     return (
-        <div className="max-w-2xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6">Offerte Bewerken ({formData.quoteNumber})</h1>
+        <div className="form-container">
+            <h1 className="page-title mb-6">Offerte Bewerken ({formData.quoteNumber})</h1>
             <form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl p-8 space-y-6">
                 {/* ... (Formulier vergelijkbaar met SubmitQuote.jsx) ... */}
-                <button type="submit" disabled={isSubmitting} className="w-full btn btn-primary">
-                    {isSubmitting ? <span className="loading loading-spinner"></span> : 'Wijzigingen Opslaan'}
+                <button type="submit" disabled={isSubmitting} className="w-full btn-primary">
+                    {isSubmitting ? <span className="loading-spinner"></span> : 'Wijzigingen Opslaan'}
                 </button>
             </form>
         </div>

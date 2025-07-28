@@ -12,7 +12,7 @@ const KanbanColumn = ({ title, jobs, navigateTo }) => (
                 <div 
                     key={job.id} 
                     onClick={() => navigateTo('production-details', job.id)}
-                    className="card bg-base-100 shadow-md hover:shadow-xl cursor-pointer transition-shadow"
+                    className="card-interactive"
                 >
                     <div className="card-body p-4">
                         <h4 className="card-title text-base">{job.title}</h4>
@@ -46,7 +46,7 @@ const ProductionKanban = ({ navigateTo, showNotification, currentUser }) => {
         }
     }, [currentUser, showNotification]);
 
-    if (isLoading) return <div className="text-center p-10">Productieplanning laden...</div>;
+    if (isLoading) return <div className="loading-text">Productieplanning laden...</div>;
     
     // Verdeel de opdrachten over de kolommen
     const jobsToDo = jobs.filter(j => j.status === 'in_production' && !j.productionSteps.some(s => s.status === 'in_progress' || s.status === 'completed'));
@@ -54,13 +54,13 @@ const ProductionKanban = ({ navigateTo, showNotification, currentUser }) => {
     const jobsCompleted = jobs.filter(j => j.status === 'completed');
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
              <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold">Productieplanning</h1>
-                    <p className="text-base-content/70 mt-2">Visueel overzicht van uw productielijn.</p>
+                    <h1 className="page-title">Productieplanning</h1>
+                    <p className="page-subtitle">Visueel overzicht van uw productielijn.</p>
                 </div>
-                <button onClick={() => navigateTo('my-productions')} className="btn btn-ghost">
+                <button onClick={() => navigateTo('my-productions')} className="btn-ghost">
                     &larr; Terug naar Lijstweergave
                 </button>
             </div>

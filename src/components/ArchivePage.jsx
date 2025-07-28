@@ -26,18 +26,18 @@ const ArchivePage = ({ showNotification, currentUser, navigateTo }) => {
     }, [currentUser, showNotification]);
 
     if (isLoading) {
-        return <div className="text-center p-10">Archief laden...</div>;
+        return <div className="loading-text">Archief laden...</div>;
     }
 
     return (
-        <div className="container mx-auto">
+        <div className="page-container">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold">Archief</h1>
-                <p className="text-base-content/70 mt-2">Hier vindt u een overzicht van al uw voltooide of geannuleerde opdrachten.</p>
+                <h1 className="page-title">Archief</h1>
+                <p className="page-subtitle">Hier vindt u een overzicht van al uw voltooide of geannuleerde opdrachten.</p>
             </div>
 
             {archivedJobs.length === 0 ? (
-                <div className="card bg-base-100 text-center p-10">
+                <div className="card-placeholder">
                     <p>Er zijn geen gearchiveerde opdrachten.</p>
                 </div>
             ) : (
@@ -49,7 +49,7 @@ const ArchivePage = ({ showNotification, currentUser, navigateTo }) => {
                             className="card bg-base-100 shadow-md opacity-75" // Gearchiveerde items zijn iets doorzichtiger
                         >
                             <div className="card-body">
-                                <h2 className="card-title">{job.title}</h2>
+                                <h2 className="card-title-lg">{job.title}</h2>
                                 <div className="flex items-center space-x-4 text-sm text-base-content/70 mt-2">
                                     <span><strong>Status:</strong> {job.status}</span>
                                     <span><strong>Afgerond op:</strong> {new Date(job.updatedAt).toLocaleDateString()}</span>

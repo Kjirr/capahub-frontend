@@ -49,42 +49,42 @@ const EditJob = ({ showNotification, navigateTo, viewParam: jobId, currentUser }
     
     const inputClasses = "w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500";
 
-    if (isLoading) return <div className="text-center p-10">Opdracht laden...</div>;
-    if (!jobData) return <div className="text-center p-10">Kon opdracht niet laden.</div>;
+    if (isLoading) return <div className="loading-text">Opdracht laden...</div>;
+    if (!jobData) return <div className="loading-text">Kon opdracht niet laden.</div>;
 
     return (
-        <div className="max-w-2xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6">Opdracht Bewerken</h1>
+        <div className="form-container">
+            <h1 className="page-title mb-6">Opdracht Bewerken</h1>
             <form onSubmit={handleSubmit} className="card p-6 space-y-6">
                  <div className="space-y-4">
                     <div>
-                        <label htmlFor="title" className="block font-semibold mb-1">Titel</label>
+                        <label htmlFor="title" className="form-label">Titel</label>
                         <input id="title" name="title" type="text" value={jobData.title} onChange={handleChange} className={inputClasses} required />
                     </div>
                     <div>
-                        <label htmlFor="description" className="block font-semibold mb-1">Omschrijving</label>
+                        <label htmlFor="description" className="form-label">Omschrijving</label>
                         <textarea id="description" name="description" value={jobData.description} onChange={handleChange} className={inputClasses} rows="5" required></textarea>
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
                     <div>
-                        <label htmlFor="quantity" className="block font-semibold mb-1">Oplage</label>
+                        <label htmlFor="quantity" className="form-label">Oplage</label>
                         <input id="quantity" name="quantity" type="number" value={jobData.quantity} onChange={handleChange} className={inputClasses} required />
                     </div>
                      <div>
-                        <label htmlFor="material" className="block font-semibold mb-1">Materiaal</label>
+                        <label htmlFor="material" className="form-label">Materiaal</label>
                         <input id="material" name="material" type="text" value={jobData.material} onChange={handleChange} className={inputClasses} required />
                     </div>
                      <div>
-                        <label htmlFor="format" className="block font-semibold mb-1">Formaat (optioneel)</label>
+                        <label htmlFor="format" className="form-label">Formaat (optioneel)</label>
                         <input id="format" name="format" type="text" value={jobData.format || ''} onChange={handleChange} className={inputClasses} />
                     </div>
                     <div>
-                        <label htmlFor="deadline" className="block font-semibold mb-1">Deadline Opdracht</label>
+                        <label htmlFor="deadline" className="form-label">Deadline Opdracht</label>
                         <input id="deadline" name="deadline" type="date" value={jobData.deadline} onChange={handleChange} className={inputClasses} required />
                     </div>
                      <div>
-                        <label htmlFor="quotingDeadline" className="block font-semibold mb-1">Deadline Offertes (optioneel)</label>
+                        <label htmlFor="quotingDeadline" className="form-label">Deadline Offertes (optioneel)</label>
                         <input id="quotingDeadline" name="quotingDeadline" type="date" value={jobData.quotingDeadline} onChange={handleChange} className={inputClasses} />
                     </div>
                 </div>
@@ -94,7 +94,7 @@ const EditJob = ({ showNotification, navigateTo, viewParam: jobId, currentUser }
                         <label htmlFor="isPublic">Plaats deze opdracht ook openbaar op de Marktplaats</label>
                     </div>
                 </div>
-                <button type="submit" disabled={isSubmitting} className="w-full btn btn-primary disabled:opacity-50">
+                <button type="submit" disabled={isSubmitting} className="w-full btn-primary">
                     {isSubmitting ? 'Bezig met opslaan...' : 'Wijzigingen Opslaan'}
                 </button>
             </form>
