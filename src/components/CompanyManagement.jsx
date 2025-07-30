@@ -42,6 +42,7 @@ const CompanyManagement = ({ currentUser, showNotification, navigateTo }) => {
                     <thead>
                         <tr>
                             <th>Bedrijfsnaam</th>
+                            <th>Abonnement</th>
                             <th>KvK</th>
                             <th>Contactgegevens</th>
                             <th>Activiteit</th>
@@ -52,7 +53,13 @@ const CompanyManagement = ({ currentUser, showNotification, navigateTo }) => {
                         {companies.map(company => (
                             <tr key={company.id} className="hover">
                                 <td className="font-bold">{company.name}</td>
-                                <td>{company.kvk}</td>
+                                {/* --- NIEUWE CEL --- */}
+                                <td>
+                                    <span className="badge badge-secondary badge-outline">
+                                        {company.plan?.name || 'Geen'}
+                                    </span>
+                                </td>
+                                <td>{company.kvK}</td>
                                 <td>
                                     <div>{company.adres || '-'}</div>
                                     <div className="text-xs text-base-content/60">{company.plaats || '-'}</div>
