@@ -43,7 +43,12 @@ import WarehouseManagement from './components/WarehouseManagement';
 import PlanManagement from './components/PlanManagement';
 import JobsDashboard from './components/JobsDashboard';
 import MarketplaceDashboard from './components/MarketplaceDashboard';
-import OffersDashboard from './components/OffersDashboard'; // NIEUW
+import OffersDashboard from './components/OffersDashboard';
+import SettingsDashboard from './components/SettingsDashboard';
+import MachineManagement from './components/MachineManagement';
+import LaborRateManagement from './components/LaborRateManagement'; 
+import FinishingManagement from './components/FinishingManagement';
+import CreateQuote from './components/CreateQuote'; // NIEUW
 
 const App = () => {
     const [currentUser, setCurrentUser] = useState(null);
@@ -76,7 +81,8 @@ const App = () => {
                 'archive', 'marketplace', 'notifications', 'team-management',
                 'material-management', 'supplier-management', 'purchase-order-management', 'create-purchase-order',
                 'purchase-order-details', 'warehouse-management', 'jobs-dashboard', 'marketplace-dashboard',
-                'offers-dashboard', // NIEUW
+                'offers-dashboard', 'settings-dashboard', 'machine-management', 'labor-rate-management', 'finishing-management', 
+                'create-quote', // NIEUW
                 'admin-dashboard', 'user-management', 'company-management', 'plan-management'
             ];
             const adminOnlyRoutes = ['admin-dashboard', 'user-management', 'company-management', 'plan-management'];
@@ -115,8 +121,14 @@ const App = () => {
             case 'warehouse-management': return <WarehouseManagement {...props} />;
             case 'jobs-dashboard': return <JobsDashboard {...props} />;
             case 'marketplace-dashboard': return <MarketplaceDashboard {...props} />;
-            case 'offers-dashboard': return <OffersDashboard {...props} />; // NIEUW
+            case 'offers-dashboard': return <OffersDashboard {...props} />;
+            case 'settings-dashboard': return <SettingsDashboard {...props} />;
+            case 'machine-management': return <MachineManagement {...props} />;
+            case 'labor-rate-management': return <LaborRateManagement {...props} />;
+            case 'finishing-management': return <FinishingManagement {...props} />;
+            case 'create-quote': return <CreateQuote {...props} viewParam={viewParam}/>; // NIEUW
 
+            // ... overige user-specifieke routes ...
             case 'my-jobs': return <MyJobs {...props} />;
             case 'create-job': return <CreateJob {...props} />;
             case 'job-details': return <JobDetails {...props} viewParam={viewParam} />;

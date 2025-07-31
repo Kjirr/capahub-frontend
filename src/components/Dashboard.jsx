@@ -15,27 +15,12 @@ const Dashboard = ({ currentUser, navigateTo }) => {
         return <div className="loading-text">Dashboard laden...</div>;
     }
 
-    // --- DE DEFINITIEVE, STRIKTE FUNCTIE ---
     const canAccessFeature = (permissionName) => {
-        // Haal de permissies op die bij het abonnement van het bedrijf horen (uit de token).
         const planPermissions = currentUser.subscription?.permissions?.map(p => p.name) || [];
-        
-        // 1. Controleert het abonnement: Geeft het plan wel toegang tot deze module?
         const planHasPermission = planPermissions.includes(permissionName);
-
-        // Als een module niet in het plan zit, heeft NIEMAND toegang.
-        if (!planHasPermission) {
-            return false;
-        }
-
-        // 2. Als het plan toegang geeft, is de 'owner' direct gemachtigd.
-        if (currentUser.companyRole === 'owner') {
-            return true;
-        }
-
-        // 3. Voor 'members' moet de permissie ook persoonlijk zijn toegewezen.
+        if (!planHasPermission) return false;
+        if (currentUser.companyRole === 'owner') return true;
         const userHasPermission = currentUser.permissions?.some(p => p.name === permissionName);
-        
         return userHasPermission;
     };
 
@@ -78,6 +63,17 @@ const Dashboard = ({ currentUser, navigateTo }) => {
                 {canAccessFeature('manage_materials') && ( <div onClick={() => navigateTo('material-management')} className="card-interactive bg-secondary text-secondary-content"><div className="card-body items-center text-center"><h2 className="card-title-lg">Materiaalbeheer</h2><p>Beheer materialen en prijzen.</p></div></div> )}
                 {canAccessFeature('manage_purchasing') && ( <> <div onClick={() => navigateTo('supplier-management')} className="card-interactive bg-accent text-accent-content"><div className="card-body items-center text-center"><h2 className="card-title-lg">Leveranciersbeheer</h2><p>Beheer de leveranciers van uw bedrijf.</p></div></div> <div onClick={() => navigateTo('purchase-order-management')} className="card-interactive bg-accent text-accent-content"><div className="card-body items-center text-center"><h2 className="card-title-lg">Inkoopbeheer</h2><p>Beheer alle inkooporders.</p></div></div> </> )}
                 {canAccessFeature('manage_warehouse') && ( <div onClick={() => navigateTo('warehouse-management')} className="card-interactive bg-info text-info-content"><div className="card-body items-center text-center"><h2 className="card-title-lg">Magazijnbeheer</h2><p>Beheer magazijnlocaties en voorraad.</p></div></div> )}
+                {canAccessFeature('manage_production') && ( <div onClick={() => navigateTo('production-kanban')} className="card-interactive" style={{backgroundColor: '#4a00e0', color: 'white'}}><div className="card-body items-center text-center"><h2 className="card-title-lg">Productieplanning</h2><p>Bekijk het visuele planbord.</p></div></div> )}
+                
+                {/* --- NIEUWE KAART VOOR INSTELLINGEN --- */}
+                {canAccessFeature('manage_admin') && (
+                     <div onClick={() => navigateTo('settings-dashboard')} className="card-interactive border-2 border-gray-300">
+                        <div className="card-body items-center text-center">
+                            <h2 className="card-title-lg">Instellingen</h2>
+                            <p>Beheer de calculatie-engine en meer.</p>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -6,8 +6,8 @@ const AddMaterialModal = ({ isOpen, onClose, onMaterialAdded, showNotification }
     const initialState = {
         name: '',
         type: 'SHEET',
-        stockLevel: '',
-        stockUnit: 'vellen',
+        unit: 'vellen',
+        thickness: '', // Nieuw veld
         pricingModel: 'PER_SHEET',
         price: '',
         sheetWidth_mm: '',
@@ -28,9 +28,9 @@ const AddMaterialModal = ({ isOpen, onClose, onMaterialAdded, showNotification }
         try {
             const newMaterial = await apiRequest('/materials', 'POST', formData);
             showNotification(`Materiaal '${newMaterial.name}' succesvol aangemaakt!`, 'success');
-            onMaterialAdded(); // Vernieuw de lijst op de hoofdpagina
-            onClose(); // Sluit de modal
-            setFormData(initialState); // Reset het formulier
+            onMaterialAdded();
+            onClose();
+            setFormData(initialState);
         } catch (error) {
             showNotification(error.message, 'error');
         } finally {
@@ -47,19 +47,17 @@ const AddMaterialModal = ({ isOpen, onClose, onMaterialAdded, showNotification }
                     <h2 className="card-title-lg">Nieuw Materiaal Toevoegen</h2>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        {/* Kolom 1 */}
                         <div className="space-y-4">
-                            <input type="text" name="name" placeholder="Materiaalnaam (bv. Glossy 250g)" value={formData.name} onChange={handleChange} className="input input-bordered w-full" required />
+                            <input type="text" name="name" placeholder="Materiaalnaam (bv. Glossy)" value={formData.name} onChange={handleChange} className="input input-bordered w-full" required />
+                            <input type="text" name="thickness" placeholder="Dikte/Grammage (bv. 250g)" value={formData.thickness} onChange={handleChange} className="input input-bordered w-full" />
                             <select name="type" value={formData.type} onChange={handleChange} className="select select-bordered w-full">
                                 <option value="SHEET">Vel/Plaat</option>
                                 <option value="ROLL">Rol</option>
                                 <option value="LIQUID">Vloeistof (bv. inkt)</option>
                                 <option value="OTHER">Overig</option>
                             </select>
-                            <input type="number" name="stockLevel" placeholder="Voorraad" value={formData.stockLevel} onChange={handleChange} className="input input-bordered w-full" required />
-                            <input type="text" name="stockUnit" placeholder="Eenheid (bv. vellen, m, liter)" value={formData.stockUnit} onChange={handleChange} className="input input-bordered w-full" required />
+                            <input type="text" name="unit" placeholder="Eenheid (bv. vellen, m, liter)" value={formData.unit} onChange={handleChange} className="input input-bordered w-full" required />
                         </div>
-                        {/* Kolom 2 */}
                         <div className="space-y-4">
                             <select name="pricingModel" value={formData.pricingModel} onChange={handleChange} className="select select-bordered w-full">
                                 <option value="PER_SQUARE_METER">Prijs per m²</option>
@@ -67,8 +65,7 @@ const AddMaterialModal = ({ isOpen, onClose, onMaterialAdded, showNotification }
                                 <option value="PER_ROLL">Prijs per rol</option>
                                 <option value="PER_UNIT">Prijs per eenheid</option>
                             </select>
-                            <input type="number" step="0.01" name="price" placeholder="Prijs" value={formData.price} onChange={handleChange} className="input input-bordered w-full" required />
-                            {/* Conditionele velden */}
+                            <input type="number" step="0.01" name="price" placeholder="Prijs per eenheid" value={formData.price} onChange={handleChange} className="input input-bordered w-full" required />
                             {formData.type === 'SHEET' && (
                                 <>
                                     <input type="number" name="sheetWidth_mm" placeholder="Vel breedte (mm)" value={formData.sheetWidth_mm} onChange={handleChange} className="input input-bordered w-full" />

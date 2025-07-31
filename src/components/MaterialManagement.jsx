@@ -2,14 +2,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiRequest } from '../api';
 import AddMaterialModal from './AddMaterialModal';
+import StockCorrectionModal from './StockCorrectionModal';
 
 const MaterialManagement = ({ showNotification }) => {
     const [materials, setMaterials] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isCorrectionModalOpen, setIsCorrectionModalOpen] = useState(false);
+    const [selectedMaterial, setSelectedMaterial] = useState(null);
 
     const fetchMaterials = useCallback(async () => {
-        setIsLoading(true);
         try {
             const data = await apiRequest('/materials', 'GET');
             setMaterials(data);
@@ -24,22 +26,22 @@ const MaterialManagement = ({ showNotification }) => {
         fetchMaterials();
     }, [fetchMaterials]);
 
-    // --- HELPER FUNCTIES VOOR VOORRAADWEERGAVE ---
-    
-    // Berekent de totale voorraad voor een materiaal door alle locaties op te tellen
     const calculateTotalStock = (inventoryItems) => {
         if (!inventoryItems || inventoryItems.length === 0) return 0;
         return inventoryItems.reduce((total, item) => total + item.quantity, 0);
     };
 
-    // Maakt een leesbare tekst van de voorraad per locatie
     const formatStockLocations = (inventoryItems) => {
         if (!inventoryItems || inventoryItems.length === 0) return 'Geen voorraad';
         return inventoryItems
             .map(item => `${item.quantity} op "${item.location.name}"`)
-            .join(', ');
+            .join('; ');
     };
-
+    
+    const openCorrectionModal = (material) => {
+        setSelectedMaterial(material);
+        setIsCorrectionModalOpen(true);
+    };
 
     if (isLoading && materials.length === 0) {
         return <div className="loading-text">Materialen laden...</div>;
@@ -50,10 +52,10 @@ const MaterialManagement = ({ showNotification }) => {
             <div className="page-container">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="page-title">Materiaalbeheer</h1>
-                        <p className="page-subtitle">Beheer hier de materialen en prijzen voor uw bedrijf.</p>
+                        <h1 className="page-title">Materiaal- & Voorraadbeheer</h1>
+                        <p className="page-subtitle">Beheer materialen, prijzen en de actuele voorraad.</p>
                     </div>
-                    <button onClick={() => setIsModalOpen(true)} className="btn btn-primary">
+                    <button onClick={() => setIsAddModalOpen(true)} className="btn btn-primary">
                         Nieuw Materiaal
                     </button>
                 </div>
@@ -64,26 +66,33 @@ const MaterialManagement = ({ showNotification }) => {
                             <table className="table w-full">
                                 <thead>
                                     <tr>
-                                        <th>Naam</th>
-                                        <th>Type</th>
-                                        <th>Prijs (€)</th>
+                                        <th>Materiaal</th>
                                         <th>Totale Voorraad</th>
                                         <th>Locaties</th>
+                                        <th className="text-right">Acties</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {materials.length > 0 ? materials.map(material => (
                                         <tr key={material.id} className="hover">
-                                            <td className="font-bold">{material.name}</td>
-                                            <td>{material.type}</td>
-                                            <td>{material.price.toFixed(2)} ({material.pricingModel})</td>
-                                            {/* Gebruik de nieuwe helper functie voor de totale voorraad */}
-                                            <td><strong>{calculateTotalStock(material.inventoryItems)}</strong></td>
-                                            {/* Toon de gedetailleerde locatie-informatie */}
+                                            <td className="font-bold">
+                                                {material.name}
+                                                {/* Toon de dikte als die is ingevuld */}
+                                                {material.thickness && <span className="text-base-content/60 ml-2">({material.thickness})</span>}
+                                            </td>
+                                            <td><strong>{calculateTotalStock(material.inventoryItems)} {material.unit}</strong></td>
                                             <td className="text-sm">{formatStockLocations(material.inventoryItems)}</td>
+                                            <td className="text-right">
+                                                <button 
+                                                    onClick={() => openCorrectionModal(material)}
+                                                    className="btn btn-outline btn-sm"
+                                                >
+                                                    Voorraad Aanpassen
+                                                </button>
+                                            </td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan="5" className="text-center">Nog geen materialen toegevoegd.</td></tr>
+                                        <tr><td colSpan="4" className="text-center">Nog geen materialen toegevoegd.</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -93,10 +102,17 @@ const MaterialManagement = ({ showNotification }) => {
             </div>
 
             <AddMaterialModal 
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
                 onMaterialAdded={fetchMaterials}
                 showNotification={showNotification}
+            />
+            <StockCorrectionModal
+                isOpen={isCorrectionModalOpen}
+                onClose={() => setIsCorrectionModalOpen(false)}
+                onSave={fetchMaterials}
+                showNotification={showNotification}
+                material={selectedMaterial}
             />
         </>
     );
