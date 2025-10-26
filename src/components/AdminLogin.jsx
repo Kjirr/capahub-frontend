@@ -1,7 +1,7 @@
 // src/components/AdminLogin.jsx
-
 import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../api';
+// --- ▼▼▼ AANGEPAST: Importeer de specifieke API-functies ▼▼▼ ---
+import { checkAdminStatus, setupAdmin, loginUser } from '../api';
 
 const AdminLogin = ({ handleLogin, showNotification }) => {
     const [needsSetup, setNeedsSetup] = useState(null); // null = loading
@@ -10,15 +10,16 @@ const AdminLogin = ({ handleLogin, showNotification }) => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const checkAdminStatus = async () => {
+        const fetchAdminStatus = async () => {
             try {
-                const { adminExists } = await apiRequest('/admin/status', 'GET');
+                // --- ▼▼▼ AANGEPAST: Gebruik de correcte, centrale functie ▼▼▼ ---
+                const { adminExists } = await checkAdminStatus();
                 setNeedsSetup(!adminExists);
             } catch (err) {
                 setError('Kon serverstatus niet controleren. Is de backend online?');
             }
         };
-        checkAdminStatus();
+        fetchAdminStatus();
     }, []);
 
     const handleChange = (e) => {
@@ -30,7 +31,8 @@ const AdminLogin = ({ handleLogin, showNotification }) => {
         setIsSubmitting(true);
         setError('');
         try {
-            await apiRequest('/admin/setup', 'POST', formData);
+            // --- ▼▼▼ AANGEPAST: Gebruik de correcte, centrale functie ▼▼▼ ---
+            await setupAdmin(formData);
             showNotification('Admin account succesvol aangemaakt! U kunt nu inloggen.', 'success');
             setNeedsSetup(false); // Schakel over naar login-modus
         } catch (err) {
@@ -44,8 +46,9 @@ const AdminLogin = ({ handleLogin, showNotification }) => {
         setIsSubmitting(true);
         setError('');
         try {
-            const data = await apiRequest('/auth/login', 'POST', { email: formData.email, password: formData.password });
-            handleLogin(data.token, data.user, true);
+            // --- ▼▼▼ AANGEPAST: Gebruik de correcte, centrale functie ▼▼▼ ---
+            const data = await loginUser({ email: formData.email, password: formData.password });
+            handleLogin(data.token, data.user, true); // true om aan te geven dat het een admin is
         } catch (err) {
             setError(err.message);
         } finally {

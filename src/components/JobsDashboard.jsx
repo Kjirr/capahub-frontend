@@ -1,6 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const JobsDashboard = ({ navigateTo, currentUser }) => {
+const JobsDashboard = () => {
+    const navigate = useNavigate();
+    
+    // De gestandaardiseerde class voor alle interactieve kaarten
+    const cardClasses = "card shadow-md transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer";
+
     return (
         <div className="page-container">
             <div className="mb-8">
@@ -10,8 +16,8 @@ const JobsDashboard = ({ navigateTo, currentUser }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div 
-                    onClick={() => navigateTo('create-job')} 
-                    className="card-interactive bg-success text-success-content"
+                    onClick={() => navigate('/create-job')} 
+                    className={`${cardClasses} bg-success text-success-content`}
                 >
                     <div className="card-body items-center text-center">
                         <h2 className="card-title-lg">Nieuwe Opdracht</h2>
@@ -19,8 +25,8 @@ const JobsDashboard = ({ navigateTo, currentUser }) => {
                     </div>
                 </div>
                 <div 
-                    onClick={() => navigateTo('my-jobs')} 
-                    className="card-interactive"
+                    onClick={() => navigate('/my-jobs')} 
+                    className={cardClasses}
                 >
                     <div className="card-body items-center text-center">
                         <h2 className="card-title-lg">Mijn Actieve Opdrachten</h2>
@@ -28,8 +34,8 @@ const JobsDashboard = ({ navigateTo, currentUser }) => {
                     </div>
                 </div>
                 <div 
-                    onClick={() => navigateTo('archive')} 
-                    className="card-interactive"
+                    onClick={() => navigate('/archive')} 
+                    className={cardClasses}
                 >
                     <div className="card-body items-center text-center">
                         <h2 className="card-title-lg">Gearchiveerde Opdrachten</h2>

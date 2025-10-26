@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../api';
+import React, { useState, useEffect, useCallback } from 'react';
+// --- START WIJZIGING: 'getSuppliers' vervangen door 'getPartners' ---
+import { getPartners, getMaterials, createPurchaseOrder } from '@/api';
+// --- EINDE WIJZIGING ---
 
 const CreatePurchaseOrder = ({ showNotification, navigateTo }) => {
-    // State voor de data die we ophalen
     const [suppliers, setSuppliers] = useState([]);
     const [materials, setMaterials] = useState([]);
     
-    // State voor het formulier zelf
     const [selectedSupplier, setSelectedSupplier] = useState('');
     const [items, setItems] = useState([{ materialId: '', quantity: 1, purchasePrice: '' }]);
     const [notes, setNotes] = useState('');
@@ -14,30 +14,30 @@ const CreatePurchaseOrder = ({ showNotification, navigateTo }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Haal leveranciers en materialen op wanneer de pagina laadt
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [suppliersData, materialsData] = await Promise.all([
-                    apiRequest('/suppliers', 'GET'),
-                    apiRequest('/materials', 'GET')
-                ]);
-                setSuppliers(suppliersData);
-                setMaterials(materialsData);
-            } catch (error) {
-                showNotification(error.message, 'error');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchData();
+    const fetchData = useCallback(async () => {
+        try {
+            // --- START WIJZIGING: Gebruik de nieuwe 'getPartners' functie met het juiste type ---
+            const [suppliersData, materialsData] = await Promise.all([
+                getPartners('SUPPLIER'), // Vraag specifiek om leveranciers
+                getMaterials()
+            ]);
+            // --- EINDE WIJZIGING ---
+            setSuppliers(suppliersData);
+            setMaterials(materialsData);
+        } catch (error) {
+            showNotification(error.message, 'error');
+        } finally {
+            setIsLoading(false);
+        }
     }, [showNotification]);
 
-    // Functies om de orderregels te beheren
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
     const handleItemChange = (index, field, value) => {
         const newItems = [...items];
         newItems[index][field] = value;
-        // Als een materiaal wordt gekozen, vul de prijs automatisch in (indien beschikbaar)
         if (field === 'materialId') {
             const selectedMaterial = materials.find(m => m.id === value);
             if (selectedMaterial) {
@@ -56,7 +56,6 @@ const CreatePurchaseOrder = ({ showNotification, navigateTo }) => {
         setItems(newItems);
     };
 
-    // Functie om het formulier in te dienen
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!selectedSupplier || items.some(item => !item.materialId || !item.quantity || !item.purchasePrice)) {
@@ -70,11 +69,11 @@ const CreatePurchaseOrder = ({ showNotification, navigateTo }) => {
                 notes,
                 items: items,
             };
-            await apiRequest('/purchase-orders', 'POST', payload);
+            await createPurchaseOrder(payload);
             showNotification('Inkooporder succesvol aangemaakt!', 'success');
-            navigateTo('purchase-order-management'); // Ga terug naar het overzicht
+            navigateTo('purchase-order-management');
         } catch (error) {
-            showNotification(error.message, 'error');
+            showNotification(error.response?.data?.error || 'Aanmaken mislukt.', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -87,7 +86,6 @@ const CreatePurchaseOrder = ({ showNotification, navigateTo }) => {
             <h1 className="page-title">Nieuwe Inkooporder</h1>
             <form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl p-8 mt-6">
                 
-                {/* Leverancier en notities */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="form-control">
                         <label className="label"><span className="label-text">Kies Leverancier</span></label>
@@ -107,7 +105,6 @@ const CreatePurchaseOrder = ({ showNotification, navigateTo }) => {
                     </div>
                 </div>
 
-                {/* Orderregels */}
                 <div className="divider mt-8">Orderregels</div>
                 <div className="space-y-4">
                     {items.map((item, index) => (
@@ -124,7 +121,6 @@ const CreatePurchaseOrder = ({ showNotification, navigateTo }) => {
                 </div>
                 <button type="button" onClick={addItem} className="btn btn-secondary btn-sm mt-4">+ Regel Toevoegen</button>
 
-                {/* Acties */}
                 <div className="card-actions justify-end mt-8 border-t pt-6">
                     <button type="button" onClick={() => navigateTo('purchase-order-management')} className="btn btn-ghost" disabled={isSubmitting}>Annuleren</button>
                     <button type="submit" className="btn btn-primary" disabled={isSubmitting}>

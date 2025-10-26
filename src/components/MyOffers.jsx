@@ -1,28 +1,38 @@
 // src/components/MyOffers.jsx
 
-import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../api';
+import React, { useState, useEffect, useCallback } from 'react';
+// --- START WIJZIGING: Hooks importeren ---
+import { useNavigate } from 'react-router-dom';
+import useAuthStore from '@/store/authStore';
+import { getMyOffers } from '@/api';
+// --- EINDE WIJZIGING ---
 
-const MyOffers = ({ showNotification, navigateTo, currentUser }) => {
+// --- START WIJZIGING: Props bijgewerkt ---
+const MyOffers = ({ showNotification }) => {
+    const navigate = useNavigate();
+    const { currentUser } = useAuthStore();
+    // --- EINDE WIJZIGING ---
+
     const [offers, setOffers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    const fetchOffers = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const data = await getMyOffers();
+            setOffers(data);
+        } catch (error) {
+            showNotification(error.message, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showNotification]);
+
     useEffect(() => {
-        const fetchOffers = async () => {
-            setIsLoading(true);
-            try {
-                const data = await apiRequest('/offers/my-offers', 'GET');
-                setOffers(data);
-            } catch (error) {
-                showNotification(error.message, 'error');
-            } finally {
-                setIsLoading(false);
-            }
-        };
         if (currentUser) {
             fetchOffers();
         }
-    }, [currentUser, showNotification]);
+    }, [currentUser, fetchOffers]);
 
     if (isLoading) {
         return <div className="loading-text">Aanbod laden...</div>;
@@ -35,9 +45,16 @@ const MyOffers = ({ showNotification, navigateTo, currentUser }) => {
                     <h1 className="page-title">Mijn Aanbod</h1>
                     <p className="page-subtitle">Hier beheert u uw aanbod van vrije capaciteit.</p>
                 </div>
-                <button onClick={() => navigateTo('create-offer')} className="btn-primary">
-                    Nieuw Aanbod Plaatsen
-                </button>
+                {/* --- START WIJZIGING: Navigatieknoppen bijgewerkt --- */}
+                <div className="flex items-center space-x-2">
+                    <button onClick={() => navigate('/offers-dashboard')} className="btn btn-ghost">
+                        &larr; Terug
+                    </button>
+                    <button onClick={() => navigate('/create-offer')} className="btn btn-primary">
+                        Nieuw Aanbod Plaatsen
+                    </button>
+                </div>
+                {/* --- EINDE WIJZIGING --- */}
             </div>
             {offers.length === 0 ? (
                  <div className="card-placeholder">
@@ -48,7 +65,9 @@ const MyOffers = ({ showNotification, navigateTo, currentUser }) => {
                     {offers.map(offer => (
                         <div 
                             key={offer.id} 
-                            onClick={() => navigateTo('offer-details', offer.id)} 
+                            // --- START WIJZIGING: Navigatie bijgewerkt ---
+                            onClick={() => navigate(`/offer-details/${offer.id}`)} 
+                            // --- EINDE WIJZIGING ---
                             className="card-interactive"
                         >
                             <div className="card-body">

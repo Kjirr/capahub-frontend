@@ -1,54 +1,119 @@
+// src/components/FinishingManagement.jsx
+
 import React, { useState, useEffect, useCallback } from 'react';
-import { apiRequest } from '../api';
+// DE AANPASSING ZIT HIER: We importeren de specifieke functies
+import { getFinishings, deleteFinishing } from '../api'; 
+import FinishingModal from './FinishingModal';
 
-// Modal
-const FinishingModal = ({ isOpen, onClose, onSave, showNotification, finishingToEdit }) => {
-    const initialState = { name: '', setupCost: '', costPerItem: '' };
-    const [formData, setFormData] = useState(initialState);
-    useEffect(() => { setFormData(finishingToEdit || initialState); }, [finishingToEdit, isOpen]);
+const FinishingManagement = ({ showNotification, navigateTo }) => {
+  const [finishings, setFinishings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFinishing, setSelectedFinishing] = useState(null);
 
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+  const fetchFinishings = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // DE AANPASSING ZIT HIER: We gebruiken de gecentraliseerde functie
+      const data = await getFinishings();
+      setFinishings(data);
+    } catch (error) {
+      showNotification(error.message, 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [showNotification]);
+
+  useEffect(() => {
+    fetchFinishings();
+  }, [fetchFinishings]);
+
+  const handleOpenModal = (finishing = null) => {
+    setSelectedFinishing(finishing);
+    setIsModalOpen(true);
+  };
+  
+  const handleDelete = async (id) => {
+    if (window.confirm('Weet je zeker dat je deze afwerking wilt verwijderen?')) {
         try {
-            if (finishingToEdit) {
-                await apiRequest(`/calculation-settings/finishings/${finishingToEdit.id}`, 'PUT', formData);
-                showNotification('Afwerking bijgewerkt!', 'success');
-            } else {
-                await apiRequest('/calculation-settings/finishings', 'POST', formData);
-                showNotification('Afwerking aangemaakt!', 'success');
-            }
-            onSave();
-            onClose();
-        } catch (error) { showNotification(error.message, 'error'); }
-    };
+            // DE AANPASSING ZIT HIER: We gebruiken de gecentraliseerde functie
+            await deleteFinishing(id);
+            showNotification('Afwerking succesvol verwijderd.', 'success');
+            fetchFinishings();
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    }
+  };
 
-    if (!isOpen) return null;
-    return ( <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"><form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl w-full max-w-lg"><div className="card-body"><h2 className="card-title-lg">{finishingToEdit ? 'Afwerking Bewerken' : 'Nieuwe Afwerking'}</h2><div className="form-control w-full mt-4"><label className="label"><span className="label-text">Naam Afwerking</span></label><input type="text" name="name" placeholder="bv. Mat lamineren" value={formData.name} onChange={handleChange} className="input input-bordered w-full" required /></div><div className="grid grid-cols-2 gap-4 mt-2"><div className="form-control w-full"><label className="label"><span className="label-text">Opstartkosten (€)</span></label><input type="number" step="0.01" name="setupCost" value={formData.setupCost} onChange={handleChange} className="input input-bordered w-full" required /></div><div className="form-control w-full"><label className="label"><span className="label-text">Kosten per stuk (€)</span></label><input type="number" step="0.01" name="costPerItem" value={formData.costPerItem} onChange={handleChange} className="input input-bordered w-full" required /></div></div><div className="card-actions justify-end mt-6"><button type="button" onClick={onClose} className="btn btn-ghost">Annuleren</button><button type="submit" className="btn btn-primary">Opslaan</button></div></div></form></div> );
-};
+  if (isLoading) {
+    return <div className="text-center p-8">Afwerkingen laden...</div>;
+  }
 
-// Hoofdcomponent
-const FinishingManagement = ({ navigateTo, showNotification }) => {
-    const [finishings, setFinishings] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [finishingToEdit, setFinishingToEdit] = useState(null);
+  return (
+    <>
+      <div className="page-container">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="page-title">Afwerkingenbeheer</h1>
+            <p className="page-subtitle">Beheer hier de (hand)afwerkingen en hun kostenprofielen.</p>
+          </div>
+          <div>
+            <button onClick={() => navigateTo('settings-dashboard')} className="btn btn-ghost mr-2">
+              ← Terug naar Instellingen
+            </button>
+            <button onClick={() => handleOpenModal(null)} className="btn btn-primary">
+              Nieuwe Afwerking
+            </button>
+          </div>
+        </div>
 
-    const fetchData = useCallback(async () => {
-        try { const data = await apiRequest('/calculation-settings/finishings', 'GET'); setFinishings(data); } catch (error) { showNotification(error.message, 'error'); } finally { setIsLoading(false); }
-    }, [showNotification]);
-    useEffect(() => { fetchData(); }, [fetchData]);
+        <div className="card bg-base-100 shadow-xl">
+          <div className="card-body">
+            <div className="overflow-x-auto">
+              <table className="table w-full">
+                <thead>
+                  <tr>
+                    <th>Naam</th>
+                    <th>Methode</th>
+                    <th>Kosten per Eenheid</th>
+                    <th>Opstartkosten</th>
+                    <th className="text-right">Acties</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {finishings.length > 0 ? (
+                    finishings.map((finishing) => (
+                      <tr key={finishing.id} className="hover">
+                        <td className="font-bold">{finishing.name}</td>
+                        <td>{finishing.costingProfile?.costingMethod}</td>
+                        <td>€ {Number(finishing.costingProfile?.costPerUnit || 0).toFixed(2)}</td>
+                        <td>€ {Number(finishing.costingProfile?.setupCost || 0).toFixed(2)}</td>
+                        <td className="text-right space-x-2">
+                          <button onClick={() => handleOpenModal(finishing)} className="btn btn-sm btn-outline">Bewerken</button>
+                          <button onClick={() => handleDelete(finishing.id)} className="btn btn-sm btn-error">Verwijderen</button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="5" className="text-center py-4">Nog geen afwerkingen aangemaakt.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    const openCreateModal = () => { setFinishingToEdit(null); setIsModalOpen(true); };
-    const openEditModal = (finishing) => { setFinishingToEdit(finishing); setIsModalOpen(true); };
-    const handleDelete = async (id, name) => {
-        if (!window.confirm(`Zeker weten dat u '${name}' wilt verwijderen?`)) return;
-        try { await apiRequest(`/calculation-settings/finishings/${id}`, 'DELETE'); showNotification('Afwerking verwijderd.', 'success'); fetchData(); } catch (error) { showNotification(error.message, 'error'); }
-    };
-
-    if (isLoading) return <div className="loading-text">Afwerkingen laden...</div>;
-
-    return ( <> <div className="page-container"><div className="flex justify-between items-center mb-6"><div><h1 className="page-title">Afwerkingen Beheer</h1><p className="page-subtitle">Beheer hier de kosten voor afwerkingsprocessen.</p></div><div className="flex gap-2"><button onClick={() => navigateTo('settings-dashboard')} className="btn btn-ghost">← Terug</button><button onClick={openCreateModal} className="btn btn-primary">Nieuwe Afwerking</button></div></div><div className="card bg-base-100 shadow-xl"><div className="card-body"><div className="overflow-x-auto"><table className="table w-full"><thead><tr><th>Naam</th><th className="text-right">Opstartkosten (€)</th><th className="text-right">Kosten p/st (€)</th><th className="text-right">Acties</th></tr></thead><tbody>{finishings.length > 0 ? finishings.map(f => ( <tr key={f.id} className="hover"><td className="font-bold">{f.name}</td><td className="text-right">{parseFloat(f.setupCost).toFixed(2)}</td><td className="text-right">{parseFloat(f.costPerItem).toFixed(2)}</td><td className="text-right space-x-2"><button onClick={() => openEditModal(f)} className="btn btn-outline btn-sm">Bewerken</button><button onClick={() => handleDelete(f.id, f.name)} className="btn btn-error btn-sm">Verwijderen</button></td></tr> )) : ( <tr><td colSpan="4" className="text-center">Nog geen afwerkingen aangemaakt.</td></tr> )}</tbody></table></div></div></div></div> <FinishingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={fetchData} showNotification={showNotification} finishingToEdit={finishingToEdit} /> </> );
+      <FinishingModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={fetchFinishings}
+        showNotification={showNotification}
+        finishing={selectedFinishing}
+      />
+    </>
+  );
 };
 
 export default FinishingManagement;

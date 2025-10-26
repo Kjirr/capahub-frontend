@@ -1,142 +1,93 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { apiRequest } from '../api';
+import React, { useState, useEffect } from 'react';
+// GEWIJZIGD: De ongebruikte imports zijn nu correct verwijderd
+import { getAdminStats, getPendingUsers } from '@/api';
 
-const AdminDashboard = ({ currentUser, navigateTo, showNotification }) => {
-    const [stats, setStats] = useState(null);
-    const [pendingUsers, setPendingUsers] = useState([]);
-    const [recentCompanies, setRecentCompanies] = useState([]);
+const DashboardTile = ({ title, count, children, onClick, className = '' }) => (
+    <div 
+        onClick={onClick}
+        className={`bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer flex flex-col ${className}`}
+    >
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-700">{title}</h2>
+            {count !== undefined && (
+                <span className="text-2xl font-bold text-primary">{count}</span>
+            )}
+        </div>
+        <div className="flex-grow">
+            {children}
+        </div>
+    </div>
+);
+
+
+const AdminDashboard = ({ navigateTo }) => {
+    const [data, setData] = useState({
+        stats: null,
+        pendingUsers: [],
+    });
     const [isLoading, setIsLoading] = useState(true);
-
-    const fetchData = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            // Haal alle benodigde data voor het dashboard in één keer op
-            const [statsData, pendingUsersData, recentCompaniesData] = await Promise.all([
-                apiRequest('/admin/stats', 'GET'),
-                apiRequest('/admin/dashboard/pending-users', 'GET'),
-                apiRequest('/admin/dashboard/recent-companies', 'GET')
-            ]);
-            setStats(statsData);
-            setPendingUsers(pendingUsersData);
-            setRecentCompanies(recentCompaniesData);
-        } catch (error) {
-            showNotification(error.message, 'error');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [showNotification]);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (currentUser) {
-            fetchData();
-        }
-    }, [currentUser, fetchData]);
+        const fetchDashboardData = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                // We halen alleen nog de data op die we daadwerkelijk tonen
+                const [stats, pendingUsers] = await Promise.all([
+                    getAdminStats(),
+                    getPendingUsers(),
+                ]);
+                setData({ stats, pendingUsers });
+            } catch (err) {
+                setError("Dashboard data kon niet worden geladen.");
+                console.error("Foutdetails:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchDashboardData();
+    }, []);
 
-    const handleApproveUser = async (userId, userName) => {
-        if (!window.confirm(`Weet u zeker dat u gebruiker '${userName}' wilt goedkeuren?`)) return;
-        
-        try {
-            await apiRequest(`/admin/users/${userId}/approve`, 'PUT');
-            showNotification(`Gebruiker ${userName} succesvol goedgekeurd.`, 'success');
-            fetchData(); // Herlaad alle dashboard data
-        } catch (error) {
-            showNotification(error.message, 'error');
-        }
-    };
+    if (isLoading) {
+        return <div className="container mx-auto p-4">Admin Dashboard wordt geladen...</div>;
+    }
+
+    if (error) {
+        return <div className="container mx-auto p-4 text-red-600">Fout: {error}</div>;
+    }
+
+    const { stats, pendingUsers } = data;
 
     return (
-        <div className="page-container">
-            <h1 className="page-title mb-6">Admin Dashboard</h1>
-            
-            {/* --- Statstieken (blijft hetzelfde) --- */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="card bg-base-100 shadow-md p-4 text-center">
-                    <p className="text-gray-500">Totaal Bedrijven</p>
-                    <p className="page-title">{isLoading ? '...' : stats.companyCount}</p>
-                </div>
-                <div className="card bg-base-100 shadow-md p-4 text-center">
-                    <p className="text-gray-500">Totaal Opdrachten</p>
-                    <p className="page-title">{isLoading ? '...' : stats.jobCount}</p>
-                </div>
-                 <div className="card bg-base-100 shadow-md p-4 text-center">
-                    <p className="text-gray-500">Wachtend op Goedkeuring</p>
-                    <p className="text-3xl font-bold text-warning">{isLoading ? '...' : stats.pendingUsers}</p>
-                </div>
-            </div>
+        <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
+            <h1 className="text-3xl font-bold mb-6 text-gray-800">Admin Dashboard</h1>
 
-            {/* --- Nieuwe layout met tabellen --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* --- Kolom 1: Acties Vereist --- */}
-                <div className="space-y-8">
-                    <div className="card bg-base-100 shadow-xl">
-                        <div className="card-body">
-                            <h2 className="card-title">Goedkeuring Vereist</h2>
-                            <div className="overflow-x-auto">
-                                <table className="table w-full">
-                                    <tbody>
-                                        {pendingUsers.length > 0 ? pendingUsers.map(user => (
-                                            <tr key={user.id}>
-                                                <td>
-                                                    <div>{user.name}</div>
-                                                    <div className="text-xs text-base-content/60">{user.company.name}</div>
-                                                </td>
-                                                <td className="text-right">
-                                                    <button onClick={() => handleApproveUser(user.id, user.name)} className="btn btn-success btn-sm">
-                                                        Keur goed
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        )) : (
-                                            <tr><td>Geen gebruikers die wachten op goedkeuring.</td></tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div className="card-actions justify-end mt-4">
-                                <button onClick={() => navigateTo('user-management')} className="btn btn-ghost btn-sm">Alle Gebruikers &rarr;</button>
-                            </div>
-                        </div>
-                    </div>
-                    {/* --- Navigatie naar instellingen --- */}
-                     <div className="card bg-base-100 shadow-xl">
-                        <div className="card-body">
-                           <h2 className="card-title">Instellingen</h2>
-                           <div className="flex gap-4 mt-2">
-                             <button onClick={() => navigateTo('plan-management')} className="btn btn-outline w-full">Abonnementen</button>
-                             {/* Hier kunnen toekomstige instellingen komen */}
-                           </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* --- Kolom 2: Recente Activiteit --- */}
-                <div className="card bg-base-100 shadow-xl">
-                    <div className="card-body">
-                        <h2 className="card-title">Recente Bedrijven</h2>
-                        <div className="overflow-x-auto">
-                            <table className="table w-full">
-                                 <tbody>
-                                    {recentCompanies.length > 0 ? recentCompanies.map(company => (
-                                        <tr key={company.id}>
-                                            <td>
-                                                <div>{company.name}</div>
-                                                <div className="text-xs text-base-content/60">Geregistreerd op {new Date(company.createdAt).toLocaleDateString()}</div>
-                                            </td>
-                                            <td className="text-right">
-                                                <span className="badge badge-secondary badge-outline">{company.plan?.name || 'Geen'}</span>
-                                            </td>
-                                        </tr>
-                                    )) : (
-                                        <tr><td>Geen recente registraties.</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                         <div className="card-actions justify-end mt-4">
-                            <button onClick={() => navigateTo('company-management')} className="btn btn-ghost btn-sm">Alle Bedrijven &rarr;</button>
-                        </div>
-                    </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <DashboardTile title="Totaal Bedrijven" count={stats?.companyCount || 0} onClick={() => navigateTo('company-management')} />
+                <DashboardTile title="Totaal Gebruikers" count={stats?.userCount || 0} onClick={() => navigateTo('user-management')} />
+                
+                <DashboardTile title="Gebruikers in Wachtrij" count={pendingUsers.length} onClick={() => navigateTo('user-management')}>
+                    {pendingUsers.length > 0 ? (
+                        <ul className="text-sm space-y-2 mt-2">
+                            {pendingUsers.slice(0, 3).map(user => (
+                                <li key={user.id} className="truncate">
+                                    {user.name} ({user.companyName})
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-gray-500 text-sm mt-2">Geen wachtende gebruikers.</p>
+                    )}
+                </DashboardTile>
+                
+                <DashboardTile title="Abonnementen Beheren" onClick={() => navigateTo('plan-management')} className="bg-primary text-primary-content hover:bg-primary-focus">
+                    <p>Beheer de pakketten en permissies.</p>
+                </DashboardTile>
+                
+                <DashboardTile title="Live Activiteit Feed" onClick={() => navigateTo('admin-activity-feed')} className="bg-info text-info-content hover:bg-info-focus lg:col-span-2">
+                     <p>Bekijk alle recente activiteit.</p>
+                </DashboardTile>
             </div>
         </div>
     );

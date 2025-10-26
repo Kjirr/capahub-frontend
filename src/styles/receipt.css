@@ -1,0 +1,124 @@
+/* src/styles/receipt.css */
+.receipt-container {
+    background-color: #f3f4f6; /* Lichtgrijze achtergrond */
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.receipt-page {
+    background: white;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 20mm;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    font-family: 'Inter', sans-serif; /* Gebruik een modern, leesbaar lettertype */
+    font-size: 10pt;
+    color: #1f2937; /* Donkergrijs voor tekst */
+}
+
+.receipt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+
+.receipt-header .company-logo img {
+    max-height: 80px;
+    max-width: 250px;
+}
+
+.receipt-header .order-title {
+    text-align: right;
+}
+
+.receipt-header .order-title h1 {
+    font-size: 24pt;
+    font-weight: bold;
+    color: #111827;
+}
+
+.receipt-addresses {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.receipt-addresses h3 {
+    font-weight: bold;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.receipt-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 2rem;
+}
+
+.receipt-table th, .receipt-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.receipt-table thead th {
+    background-color: #f9fafb;
+    font-weight: bold;
+    color: #374151;
+}
+
+.receipt-table .text-right {
+    text-align: right;
+}
+
+.receipt-totals {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.receipt-totals table {
+    width: 40%;
+}
+
+.receipt-totals td {
+    padding: 0.5rem 0.75rem;
+}
+
+.receipt-footer {
+    margin-top: 3rem;
+    text-align: center;
+    font-size: 9pt;
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1rem;
+}
+
+
+@media print {
+    body {
+        background-color: #fff;
+    }
+    .receipt-container {
+        padding: 0;
+    }
+    .receipt-page {
+        position: absolute;
+        left: 0;
+        top: 0;
+        margin: 0;
+        box-shadow: none;
+        width: 100%;
+        height: auto;
+        border: none;
+    }
+    .no-print {
+        display: none;
+    }
+}

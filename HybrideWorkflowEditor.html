@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybride Workflow Editor - Prototype</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Library for drawing lines -->
+    <script src="https://cdn.jsdelivr.net/npm/leader-line-new@1.1.9/leader-line.min.js"></script>
+    <!-- Library for parsing YAML -->
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <style>
+        /* Custom styles for nodes and highlighting */
+        .node {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .node.selected {
+            box-shadow: 0 0 0 3px #3b82f6, 0 4px 12px rgba(0,0,0,0.2);
+            transform: scale(1.05);
+        }
+        #yaml-editor {
+            font-family: 'Courier New', Courier, monospace;
+            tab-size: 2;
+        }
+        .leader-line {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Hybride Workflow Editor (Prototype)</h1>
+            <p class="text-gray-600">Klik op een visueel blok om de bijbehorende YAML-code te markeren.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Visueel Canvas -->
+            <div class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-xl font-semibold mb-6 border-b pb-3 text-gray-700">Visueel Canvas (zoals Enfocus Switch)</h2>
+                <div id="canvas" class="relative h-[600px] space-y-12 flex flex-col items-center">
+                    
+                    <div id="start_node" data-node-id="start_node" class="node bg-green-500 text-white w-48 py-3 px-4 rounded-lg shadow-md flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                        <span class="font-bold">START</span>
+                    </div>
+
+                    <div id="print_stap" data-node-id="print_stap" class="node bg-blue-500 text-white w-64 py-3 px-4 rounded-lg shadow-md">
+                        <div class="font-bold flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v1h-2V5H7v10h2v1H7a2 2 0 01-2-2V4z" /><path d="M15 7a2 2 0 00-2 2v1h-1a1 1 0 100 2h1v1a2 2 0 104 0v-1h1a1 1 0 100-2h-1v-1a2 2 0 00-2-2z" /></svg>
+                            Tauro 3300 printen
+                        </div>
+                        <div class="text-sm opacity-80 mt-1 pl-1">parameters: { kwaliteit: 'Productie' }</div>
+                    </div>
+
+                    <div id="snij_stap" data-node-id="snij_stap" class="node bg-purple-500 text-white w-64 py-3 px-4 rounded-lg shadow-md">
+                        <div class="font-bold flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.5 2a.5.5 0 00-.5.5v15a.5.5 0 00.5.5h9a.5.5 0 00.5-.5v-15a.5.5 0 00-.5-.5h-9zM4.5 3a1.5 1.5 0 011.5-1.5h9A1.5 1.5 0 0116.5 3v15a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 014.5 18V3z" clip-rule="evenodd" /><path d="M8 5a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /></svg>
+                            Elitron snijden
+                        </div>
+                         <div class="text-sm opacity-80 mt-1 pl-1">conditie: aantal >= 100</div>
+                    </div>
+
+                    <div id="einde_node" data-node-id="einde_node" class="node bg-gray-600 text-white w-48 py-3 px-4 rounded-lg shadow-md flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><path d="M16 17l-4-4 4-4" /><path d="M20 12H9" /></svg>
+                        <span class="font-bold">EINDE</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Live YAML Editor -->
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-xl font-semibold mb-6 border-b border-gray-600 pb-3 text-white">Live YAML Editor</h2>
+                <textarea id="yaml-editor" class="w-full h-[600px] bg-gray-900 text-gray-300 p-4 rounded-lg border-2 border-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const yamlEditor = document.getElementById('yaml-editor');
+        const nodes = document.querySelectorAll('.node');
+        let lines = [];
+
+        // Voorbeeld YAML data
+        const initialData = {
+            naam: 'Display Karton',
+            nodes: [
+                { id: 'start_node', type: 'Start' },
+                { id: 'print_stap', type: 'Machine', resource: 'Tauro 3300 printen', parameters: { kwaliteit: 'Productie' } },
+                { id: 'snij_stap', type: 'Finishing', resource: 'Elitron snijden', conditie: 'aantal >= 100' },
+                { id: 'einde_node', type: 'Einde' }
+            ],
+            edges: [
+                { from: 'start_node', to: 'print_stap' },
+                { from: 'print_stap', to: 'snij_stap' },
+                { from: 'snij_stap', to: 'einde_node' }
+            ]
+        };
+
+        // Functie om de flow-lijnen te tekenen
+        function drawLines() {
+            // Verwijder oude lijnen
+            lines.forEach(line => line.remove());
+            lines = [];
+
+            const data = jsyaml.load(yamlEditor.value);
+            if (data && data.edges) {
+                data.edges.forEach(edge => {
+                    const startElem = document.getElementById(edge.from);
+                    const endElem = document.getElementById(edge.to);
+                    if (startElem && endElem) {
+                        const line = new LeaderLine(startElem, endElem, {
+                            color: '#4b5563', // gray-600
+                            size: 3,
+                            path: 'grid',
+                            startSocket: 'bottom',
+                            endSocket: 'top',
+                            startPlug: 'disc',
+                            endPlug: 'arrow1',
+                            outline: true,
+                            outlineColor: '#f3f4f6', // gray-100
+                            endPlugOutline: true,
+                        });
+                        lines.push(line);
+                    }
+                });
+            }
+        }
+        
+        // Functie om een YAML-blok te markeren
+        function highlightYamlForNode(nodeId) {
+            const fullText = yamlEditor.value;
+            const lines = fullText.split('\\n');
+            let start = -1, end = -1;
+            let inNodeBlock = false;
+
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes(`id: ${nodeId}`)) {
+                    start = fullText.indexOf(lines[i]);
+                    inNodeBlock = true;
+                } else if (inNodeBlock && (lines[i].startsWith('  -') || !lines[i].startsWith('    '))) {
+                    // Blok eindigt bij de volgende node op hetzelfde niveau
+                    end = fullText.indexOf(lines[i]);
+                    break;
+                }
+            }
+
+            if (start !== -1 && end === -1) {
+                // Als het het laatste blok is
+                end = fullText.length;
+            }
+
+            if (start !== -1 && end !== -1) {
+                yamlEditor.focus();
+                yamlEditor.setSelectionRange(start, end);
+            }
+        }
+
+        // Initialisatie
+        yamlEditor.value = jsyaml.dump(initialData, { indent: 2 });
+        drawLines();
+
+        // Event Listeners
+        nodes.forEach(node => {
+            node.addEventListener('click', () => {
+                // Visuele feedback op het geselecteerde blok
+                nodes.forEach(n => n.classList.remove('selected'));
+                node.classList.add('selected');
+
+                // Markeer de YAML
+                const nodeId = node.dataset.nodeId;
+                highlightYamlForNode(nodeId);
+            });
+        });
+        
+        // Herteken de lijnen als het venster van grootte verandert
+        new ResizeObserver(drawLines).observe(document.body);
+
+    </script>
+</body>
+</html>

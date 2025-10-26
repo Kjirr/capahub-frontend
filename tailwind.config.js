@@ -1,35 +1,38 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  // Vertelt Tailwind welke bestanden gescand moeten worden op class names.
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-
-  // Hier breiden we het standaard thema van Tailwind uit met onze eigen toevoegingen.
-  theme: {
-    extend: {
-      // We voegen onze eigen, unieke merkkleuren toe.
-      colors: {
-        'prntgo-primary': '#1567ebff',        // Jouw primaire blauwe kleur
-        'prntgo-primary-darker': '#2563EB', // Een donkerdere variant voor hover-effecten
-      },
-      // Je kunt hier in de toekomst ook eigen lettertypes, schaduws, etc. toevoegen.
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'], // Zorgt ervoor dat Inter het standaard lettertype is.
-      },
+    darkMode: ["class"],
+    content: [
+      "./index.html",
+      "./src/**/*.{js,ts,jsx,tsx}",
+    ],
+    theme: {
+  	  extend: {
+          // Deze extend sectie is nu minder belangrijk, omdat DaisyUI de kleuren regelt.
+          // We laten hem staan voor eventuele specifieke custom classes.
+  	  }
     },
-  },
-
-  // Hier laden we de plugins die we willen gebruiken.
-  plugins: [
-    require("daisyui")
-  ],
-
-  // Optionele configuratie voor DaisyUI. We hebben de thema's hier niet meer nodig,
-  // maar je kunt het laten staan voor eventuele toekomstige aanpassingen.
-  daisyui: {
-    themes: false, // We gebruiken ons eigen systeem, geen DaisyUI thema's.
-    logs: false, // Verbergt de DaisyUI logs in de console.
-  },
+    plugins: [
+      require("daisyui"),
+      require("tailwindcss-animate")
+    ],
+    daisyui: {
+        themes: [
+            {
+                prntgo: { // De naam van ons custom thema
+                    "primary": "#1567eb",
+                    "secondary": "#f6d860",
+                    "accent": "#37cdbe",
+                    "neutral": "#3d4451",
+                    "base-100": "#ffffff", // Witte achtergrond voor kaarten etc.
+                    "base-200": "#f9fafb", // Iets donkerder grijs
+                    "base-300": "#f3f4f6", // Achtergrondkleur van de pagina
+                    "info": "#3abff8",
+                    "success": "#36d399",
+                    "warning": "#fbbd23",
+                    "error": "#f87272",
+                },
+            },
+        ],
+        logs: false,
+    },
 }

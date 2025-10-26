@@ -1,0 +1,116 @@
+"Hoi, hier is de laatste status van ons project:"
+
+
+Jij bent mijn ontwikkelaar (ik kan niet coderen) elke keer als we een aanpassing of verbetering gaan maken geef jij mij de compleet aangepaste bestanden, je gebruikt geen placeholders,en kort de code niet in!! heb je een bestand niet ! dan vraag je mij om het bestand, ook kom je met verbeter suggesties en ideeen. je gebruikt de nieuwste versies van code en hulp programma's.jij krijgt van mij de basis bestanden zodat je een goed overzicht krijgt van hoe het platform/project tot nu toe werkt, merk je dat je geheugen vol zit dan geef je dat meteen an dan kunnen we een andere sessie beginnen.
+
+
+
+Sessie Verslag: Promotie Content, Editor Verbeteringen & Start Facturatie
+
+Startpunt & Context
+
+Je wilde de "Promotionele Content" (die beheerd werd op de Bedrijfsprofiel-pagina) zichtbaar maken op de "Bedankt"-pagina die verschijnt na feedback op een proefdruk (ProofThanksPage.jsx). Je had al een Asset Gallerij (AssetManager.jsx) gebouwd om afbeeldingen te beheren, maar de previews werkten niet.
+
+Hoofdstuk 1: Debugging van de Asset Gallerij (CSP)
+
+Probleem: De afbeelding-previews in de AssetManager.jsx werden geblokkeerd door de Content Security Policy (CSP). De browser DevTools gaven (blocked:csp) aan.
+
+Onderzoek: We vermoedden eerst dat het probleem in de backend (server.js) zat bij de helmet configuratie. We hebben de img-src directive aangepast, maar zonder succes.
+
+Oorzaak Gevonden: Het probleem bleek in de frontend (vite.config.js) te zitten. De CSP-regels die de Vite ontwikkelserver meestuurde, stonden het laden van afbeeldingen van de backend (http://localhost:3001) niet toe.
+
+Oplossing: We hebben http://localhost:3001 toegevoegd aan de img-src directive in vite.config.js. Dit loste het preview-probleem op.
+
+Bijkomend Probleem: Het bedrijfslogo verdween van CompanyProfile.jsx. Dit kwam doordat we (onterecht) de /uploads proxy-regel in vite.config.js hadden aangepast.
+
+Oplossing: We hebben de /uploads proxy-regel hersteld naast de /public-uploads regel.
+
+Hoofdstuk 2: Herstructureren van Promotie Content Beheer
+
+Probleem: Je vond de TinyMCE-editor voor "Promotionele Content" misplaatst op de CompanyProfile.jsx pagina. Je stelde voor dit te verplaatsen.
+
+Oplossing:
+
+We hebben een nieuwe, aparte pagina gemaakt: src/components/PromotieBeheer.jsx.
+
+De TinyMCE-editor is van CompanyProfile.jsx naar PromotieBeheer.jsx verhuisd.
+
+CompanyProfile.jsx is opgeschoond (editor verwijderd).
+
+Er is een nieuwe tegel "Promotie Content" toegevoegd aan SettingsDashboard.jsx.
+
+De route /promotie-beheer is toegevoegd aan App.jsx.
+
+Hoofdstuk 3: Verbeteren van de TinyMCE Editor
+
+Probleem: De editor in PromotieBeheer.jsx was te kaal (geen tekstkleur, moeizaam afbeeldingen schalen/positioneren).
+
+Oplossing: We hebben de init-configuratie van de <Editor> in PromotieBeheer.jsx uitgebreid met:
+
+Extra plugins (textcolor, table, image_advtab).
+
+Uitgebreidere toolbar-knoppen (forecolor, backcolor, tabel-knoppen).
+
+image_advtab: true voor geavanceerde afbeeldingsopties (exacte afmetingen, marges).
+
+Bijkomend Probleem 1: De editor toonde de verkeerde (vierkante) afmetingen bij het bewerken van afbeeldingen. Dit kwam door een "CSS-lek" vanuit de hoofd-stylesheet.
+
+Oplossing 1: We hebben content_style in de editor-configuratie aangepast om afbeeldingen hun natuurlijke verhoudingen te laten behouden (img:not([style]) { width: auto !important; ... }).
+
+Bijkomend Probleem 2: De aangepaste afbeeldingsgrootte werd wel opgeslagen in de dialoog, maar niet toegepast op de afbeelding in de editor.
+
+Oplossing 2: De !important CSS-regel was te agressief. We hebben deze vervangen door een slimmere img:not([style]) selector die alleen de initiële weergave corrigeert, maar handmatige aanpassingen toestaat.
+
+Hoofdstuk 4: Layout & WYSIWYG van de "Bedankt"-Pagina
+
+Probleem: De uiteindelijke ProofThanksPage.jsx zag er kaal en onprofessioneel uit. De layout (centrering, afbeeldingsgrootte) kwam niet overeen met wat in de PromotieBeheer editor werd gemaakt (geen WYSIWYG).
+
+Onderzoek: We realiseerden ons dat de layout werd beïnvloed door zowel de ProofThanksPage.jsx component als de (onzichtbare) HTML-structuur in de FILE_PROOF_THANKS Document Template.
+
+Poging 1 (Styling): We hebben ProofThanksPage.jsx voorzien van een 'card'-layout en een standaard "Bedankt"-bericht.
+
+Poging 2 (prose): We hebben de prose class van Tailwind toegevoegd om de editor-HTML beter te respecteren, maar dit werkte onvoldoende door conflicten met de card-body.
+
+Poging 3 (<iframe>): We hebben de promotie-inhoud in een <iframe> geplaatst binnen ProofThanksPage.jsx om deze te isoleren van de pagina-CSS.
+
+Bijkomende Problemen (<iframe>): Het logo verdween, tabelranden verschenen, en tekst brak verkeerd af binnen de iframe.
+
+Oplossing (<iframe> + CSS Injectie): We hebben specifieke CSS-regels (injectedStyles) toegevoegd die in de <iframe> worden geladen om het logo te centreren, tabelranden te verbergen, en tekst-wrapping correct af te handelen.
+
+Bijkomend Probleem (Dubbel Bericht): Het "Bedankt"-bericht verscheen twee keer. Dit kwam doordat zowel ProofThanksPage.jsx als de backend (proof.controller.js in de fallback-logica) een "Bedankt"-bericht toevoegden.
+
+Oplossing (Dubbel Bericht): We hebben de "Bedankt"-tekst uit de fallback-logica in proof.controller.js verwijderd.
+
+Definitieve Structuur: We hebben geconcludeerd dat 100% WYSIWYG alleen haalbaar is door de Document Template (FILE_PROOF_THANKS) te minimaliseren tot alleen {{reclame}} en de volledige layout (inclusief logo) in de "Promotie Content Beheer" editor te maken. Jij hebt de template leeggemaakt.
+
+Laatste Bugfix: Toen de template leeg was, crashte de backend bij het ophalen van bedrijfsgegevens. We hebben een extra check toegevoegd in proof.controller.js om dit te voorkomen.
+
+Hoofdstuk 5: Start van de Facturatie Module
+
+Verzoek: Na het afronden van de "Bedankt"-pagina wilde je beginnen met de administratie/facturatie module voor verzonden orders.
+
+Database: We hebben een Invoice model en InvoiceStatus enum toegevoegd aan schema.prisma. We hebben opmaakfouten in het schema gecorrigeerd die de migratie blokkeerden.
+
+Backend:
+
+Nieuwe bestanden invoice.routes.js en invoice.controller.js aangemaakt.
+
+Logica toegevoegd in invoice.controller.js voor het genereren van een factuurnummer en het aanmaken van een Invoice record (status DRAFT) gekoppeld aan een order.
+
+server.js bijgewerkt om de nieuwe /api/invoices routes te gebruiken.
+
+Logica toegevoegd in invoice.controller.js om alle facturen op te halen (getInvoices).
+
+Frontend:
+
+Een "Maak Factuur" knop toegevoegd aan OrderDetails.jsx, zichtbaar voor COMPLETED of SHIPPED orders zonder factuur.
+
+Nieuwe API-functies createInvoiceForOrder en getInvoices toegevoegd aan api.js.
+
+Een nieuwe overzichtspagina FacturatieOverzicht.jsx gemaakt die een tabel met aangemaakte facturen toont.
+
+De route /facturatie toegevoegd aan App.jsx.
+
+Een tegel "Facturatie" toegevoegd aan Dashboard.jsx.
+
+Volgende Stap Geïdentificeerd: De benodigde placeholders (zoals {{invoice.invoiceNumber}}) ontbreken nog in je template-systeem om daadwerkelijk PDF-facturen te kunnen genereren.

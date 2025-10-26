@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { apiRequest } from '../api';
+// GEWIJZIGD: Importeer de nieuwe, specifieke functie
+import { getCompanies } from '@/api';
 
 const CompanyManagement = ({ currentUser, showNotification, navigateTo }) => {
     const [companies, setCompanies] = useState([]);
@@ -8,7 +9,8 @@ const CompanyManagement = ({ currentUser, showNotification, navigateTo }) => {
     const fetchCompanies = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await apiRequest('/admin/companies', 'GET');
+            // GEWIJZIGD: Gebruik de nieuwe, veilige functie
+            const data = await getCompanies();
             setCompanies(data);
         } catch (error) {
             showNotification(error.message, 'error');
@@ -53,13 +55,12 @@ const CompanyManagement = ({ currentUser, showNotification, navigateTo }) => {
                         {companies.map(company => (
                             <tr key={company.id} className="hover">
                                 <td className="font-bold">{company.name}</td>
-                                {/* --- NIEUWE CEL --- */}
                                 <td>
                                     <span className="badge badge-secondary badge-outline">
                                         {company.plan?.name || 'Geen'}
                                     </span>
                                 </td>
-                                <td>{company.kvK}</td>
+                                <td>{company.kvk}</td>
                                 <td>
                                     <div>{company.adres || '-'}</div>
                                     <div className="text-xs text-base-content/60">{company.plaats || '-'}</div>

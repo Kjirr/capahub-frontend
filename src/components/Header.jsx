@@ -1,27 +1,47 @@
-// src/components/Header.jsx
-
 import React from 'react';
-import AdminHeader from './AdminHeader'; // Nieuwe import
-import UserHeader from './UserHeader'; // Nieuwe import
+import useAuthStore from '@/store/authStore';
+// --- START WIJZIGING: useLocation toegevoegd om actieve pagina te bepalen ---
+import { useNavigate, useLocation } from 'react-router-dom';
+import AdminHeader from './AdminHeader';
+import UserHeader from './UserHeader';
+// --- EINDE WIJZIGING ---
 
-const Header = ({ isLoggedIn, currentUser, navigateTo, handleLogout }) => {
+const Header = ({ handleLogout }) => {
+    const { currentUser } = useAuthStore();
+    const navigate = useNavigate();
+    const location = useLocation(); // Huidige URL ophalen
+    const isLoggedIn = !!currentUser;
 
     const renderUserMenu = () => {
         if (!isLoggedIn) {
+            // --- START WIJZIGING: Knoppen hebben nu de basis 'btn' class en een actieve staat ---
+            const isLoginPage = location.pathname === '/login';
+            const isRegisterPage = location.pathname === '/register';
+
             return (
                 <div className="flex items-center space-x-2">
-                    <button onClick={() => navigateTo('login')} className="btn-ghost">Inloggen</button>
-                    <button onClick={() => navigateTo('register')} className="btn-primary">Registreren</button>
+                    <button 
+                        onClick={() => navigate('/login')} 
+                        className={`btn btn-ghost ${isLoginPage ? 'btn-active' : ''}`}
+                    >
+                        Inloggen
+                    </button>
+                    <button 
+                        onClick={() => navigate('/register')} 
+                        className={`btn btn-primary ${isRegisterPage ? 'btn-active' : ''}`}
+                    >
+                        Registreren
+                    </button>
                 </div>
             );
+            // --- EINDE WIJZIGING ---
         }
-
-        // De logica is nu heel simpel: laad het juiste component.
+        
         if (currentUser.role === 'admin') {
-            return <AdminHeader navigateTo={navigateTo} handleLogout={handleLogout} />;
+            return <AdminHeader handleLogout={handleLogout} />;
         }
 
-        return <UserHeader currentUser={currentUser} navigateTo={navigateTo} handleLogout={handleLogout} />;
+        return <UserHeader handleLogout={handleLogout} />;
     };
 
     return (
@@ -29,7 +49,7 @@ const Header = ({ isLoggedIn, currentUser, navigateTo, handleLogout }) => {
             <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
                 <div 
                     className="cursor-pointer" 
-                    onClick={() => navigateTo(isLoggedIn ? (currentUser.role === 'admin' ? 'admin-dashboard' : 'dashboard') : 'home')}
+                    onClick={() => navigate(isLoggedIn ? (currentUser.role === 'admin' ? '/admin-dashboard' : '/dashboard') : '/home')}
                 >
                     <img src="/logo.png" alt="prntgo logo" className="h-24 w-auto" />
                 </div>

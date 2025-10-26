@@ -1,291 +1,61 @@
 /* src/index.css */
+@import './styles/receipt.css';
 
-/* 1. Importeer de basislagen van Tailwind */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* 2. Definieer de basisstijl voor de hele pagina */
 @layer base {
   body {
-    @apply bg-slate-100 font-sans text-slate-800 antialiased;
+    @apply bg-base-200 text-base-content;
+    font-family: 'Inter', sans-serif;
   }
 }
 
-/* 3. Definieer je eigen, herbruikbare component-klassen */
 @layer components {
-  /* ==========================================================================
-     Layout & Containers
-     ========================================================================== */
-  .page-container {
-    @apply container mx-auto px-4 py-8;
-  }
+    /* Paginastijlen */
+    .page-container {
+        @apply max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8;
+    }
+    .page-title {
+        @apply text-3xl font-bold tracking-tight text-gray-900;
+    }
+    .page-subtitle {
+        @apply mt-1 text-sm text-gray-600;
+    }
 
-  .form-container {
-    @apply max-w-2xl mx-auto;
-  }
-  
-  .auth-container {
-    @apply max-w-md mx-auto mt-10;
-  }
-  
-  .page-header {
-    @apply flex justify-between items-center mb-8;
-  }
+    /* Kaart-stijlen */
+    .card-placeholder {
+        @apply card bg-base-100 text-center p-10 shadow-xl;
+    }
+    .card-interactive {
+        @apply card bg-base-100 shadow-md transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer;
+    }
+    .card-title-lg {
+        @apply text-xl font-bold;
+    }
 
-  /* ==========================================================================
-     Kaarten (Cards)
-     ========================================================================== */
-  .card-default {
-    @apply bg-white p-6 rounded-xl shadow-lg border border-slate-200;
-  }
-  
-  .card-interactive {
-    @apply bg-white p-6 rounded-xl shadow-lg border border-slate-200 transition-all hover:shadow-2xl hover:-translate-y-1 cursor-pointer;
-  }
+    /* Auth Pagina Stijlen */
+    .auth-container {
+        /* --- START WIJZIGING: 'items-start' toegevoegd om uitrekken te voorkomen --- */
+        @apply min-h-screen flex items-start justify-center bg-gray-50 pt-20 pb-12 px-4 sm:px-6 lg:px-8;
+        /* --- EINDE WIJZIGING --- */
+    }
+    .card-default {
+        @apply bg-white rounded-lg shadow-lg;
+    }
+    .form-title {
+        @apply text-center text-2xl font-bold text-gray-900;
+    }
+    .form-section-header {
+        @apply text-lg font-medium text-gray-800 border-t pt-4 mt-2;
+    }
+    .form-input {
+        @apply w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500;
+    }
 
-  .card-placeholder {
-    @apply bg-white text-center p-10 rounded-xl shadow-lg border border-slate-200;
-  }
-  
-  .kanban-board {
-    @apply flex flex-col md:flex-row gap-6;
-  }
-  
-  .kanban-column {
-    @apply bg-slate-200 rounded-lg p-4 w-full md:w-1/3 space-y-4;
-  }
-
-  /* ==========================================================================
-     Typografie
-     ========================================================================== */
-  .page-title {
-    @apply text-3xl font-bold text-slate-900;
-  }
-
-  .page-subtitle {
-    @apply text-slate-600 mt-2;
-  }
-
-  .section-title {
-    @apply text-lg font-semibold text-slate-900;
-  }
-  
-  .section-title-divider {
-    @apply text-2xl font-semibold border-t border-slate-200 pt-6 mt-6;
-  }
-
-  .card-title-lg {
-    @apply text-xl font-bold text-slate-900;
-  }
-  
-  .card-title-base {
-    @apply text-base font-bold text-slate-900;
-  }
-
-  .form-title {
-    @apply text-2xl font-bold text-center mb-4;
-  }
-
-  .form-section-header {
-    @apply font-semibold border-b border-slate-200 pb-2 pt-4;
-  }
-  
-  .loading-text {
-    @apply text-center p-10 text-slate-500;
-  }
-
-  /* ==========================================================================
-     Knoppen & Links
-     ========================================================================== */
-  .btn {
-    @apply inline-block font-bold py-2 px-5 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-  
-  .btn-sm {
-    @apply py-1 px-3 text-sm;
-  }
-
-  .btn-primary {
-    @apply btn bg-prntgo-primary hover:bg-prntgo-primary-darker text-white shadow-sm;
-  }
-
-  .btn-secondary {
-    @apply btn bg-slate-200 hover:bg-slate-300 text-slate-800 shadow-sm;
-  }
-
-  .btn-danger {
-    @apply btn bg-red-600 hover:bg-red-700 text-white shadow-sm;
-  }
-  
-  .btn-ghost {
-    @apply btn bg-transparent hover:bg-slate-200 text-slate-700;
-  }
-  
-  .btn-lg {
-    @apply py-3 px-6 text-lg;
-  }
-  
-  .btn-link {
-    @apply font-semibold text-prntgo-primary hover:text-prntgo-primary-darker cursor-pointer;
-  }
-
-  .btn-link-danger {
-    @apply font-semibold text-red-600 hover:text-red-800 cursor-pointer;
-  }
-
-  .link-default {
-    @apply text-prntgo-primary hover:underline cursor-pointer;
-  }
-
-  /* ==========================================================================
-     Formulieren
-     ========================================================================== */
-  .form-label {
-    @apply block font-semibold mb-1 text-slate-700;
-  }
-
-  .form-input {
-    @apply w-full p-2 border border-slate-300 rounded-md shadow-sm focus:ring-2 focus:ring-prntgo-primary/50 focus:border-prntgo-primary;
-  }
-  
-  .form-input-disabled {
-    @apply form-input bg-slate-100 cursor-not-allowed;
-  }
-  
-  .form-input-error {
-    @apply form-input border-red-500 ring-red-500/50;
-  }
-  
-  .form-error-text {
-    @apply text-red-600 text-sm mt-1;
-  }
-
-  .form-textarea {
-    @apply form-input;
-  }
-  
-  .form-checkbox-label {
-    @apply flex items-center gap-3;
-  }
-
-  .form-checkbox {
-    @apply checkbox checkbox-primary;
-  }
-
-  /* ==========================================================================
-     Tabellen
-     ========================================================================== */
-  .table-container {
-    @apply bg-white shadow-md rounded-lg border border-slate-200 overflow-x-auto;
-  }
-
-  .table-default {
-    @apply min-w-full divide-y divide-slate-200;
-  }
-
-  .table-head {
-    @apply bg-slate-50;
-  }
-
-  .table-th {
-    @apply px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider;
-  }
-
-  .table-tbody {
-    @apply bg-white divide-y divide-slate-200;
-  }
-
-  .table-tr {
-    @apply hover:bg-slate-50;
-  }
-
-  .table-td {
-    @apply px-6 py-4 whitespace-nowrap text-sm text-slate-600;
-  }
-  
-  .table-td-strong {
-    @apply font-medium text-slate-900;
-  }
-
-  /* ==========================================================================
-     Notificaties, Alerts, Modals & Badges
-     ========================================================================== */
-  .notification-banner {
-    @apply p-4 mb-4 mx-auto max-w-4xl rounded-md text-white;
-  }
-  .notification-success {
-    @apply notification-banner bg-green-500;
-  }
-  .notification-error {
-    @apply notification-banner bg-red-500;
-  }
-  .notification-info {
-    @apply notification-banner bg-blue-500;
-  }
-
-  .notification-item {
-    @apply p-4 flex items-center justify-between;
-  }
-  .notification-item-unread {
-    @apply bg-blue-50 font-semibold;
-  }
-  
-  .alert-error {
-    @apply bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md text-center;
-  }
-  
-  .modal-backdrop {
-    @apply fixed inset-0 bg-black/50 z-50 flex justify-center items-center;
-  }
-
-  .modal-panel {
-    @apply bg-white rounded-lg shadow-xl p-6 w-full max-w-md;
-  }
-
-  .loading-spinner {
-    @apply inline-block h-5 w-5 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite];
-  }
-  
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-  .badge-ghost {
-    @apply badge bg-slate-200 text-slate-800;
-  }
-  .badge-success {
-    @apply badge bg-green-100 text-green-800;
-  }
-  .badge-warning {
-    @apply badge bg-yellow-100 text-yellow-800;
-  }
-  
-  .status-badge {
-    @apply badge;
-  }
-  .status-quoting {
-    @apply status-badge bg-blue-100 text-blue-800;
-  }
-  .status-in_production {
-    @apply status-badge bg-purple-100 text-purple-800;
-  }
-  .status-completed {
-    @apply status-badge bg-green-100 text-green-800;
-  }
-  .status-rejected {
-    @apply status-badge bg-red-100 text-red-800;
-  }
-
-  /* ==========================================================================
-     Specifieke Componenten
-     ========================================================================== */
-  .star-rating {
-    @apply inline-flex;
-  }
-  .star-rating .star {
-    @apply bg-transparent border-none text-2xl text-gray-300;
-  }
-  .star-rating .star.selected {
-    @apply text-yellow-400;
-  }
+    /* Overige helpers */
+    .loading-text {
+        @apply text-center p-10 text-gray-500;
+    }
 }

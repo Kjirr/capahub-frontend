@@ -1,7 +1,8 @@
 // src/components/MyTasks.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { apiRequest } from '../api';
+// GEWIJZIGD: Importeer de nieuwe, specifieke functie
+import { getMyTasks } from '@/api';
 
 const MyTasks = ({ showNotification, navigateTo, currentUser }) => {
     const [tasks, setTasks] = useState([]);
@@ -10,7 +11,8 @@ const MyTasks = ({ showNotification, navigateTo, currentUser }) => {
     const fetchTasks = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await apiRequest('/tasks/my-tasks', 'GET');
+            // GEWIJZIGD: Gebruik de nieuwe, veilige functie
+            const data = await getMyTasks();
             setTasks(data);
         } catch (error) {
             showNotification(error.message, 'error');
@@ -26,6 +28,8 @@ const MyTasks = ({ showNotification, navigateTo, currentUser }) => {
     }, [currentUser, fetchTasks]);
 
     if (isLoading) return <div className="loading-text">Mijn taken laden...</div>;
+
+    // --- De rest van je component (de JSX) blijft ongewijzigd ---
 
     return (
         <div className="page-container">

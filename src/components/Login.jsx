@@ -1,35 +1,44 @@
-// src/components/Login.jsx
-
 import React, { useState } from 'react';
-import { apiRequest } from '../api';
+import { loginUser } from '@/api';
+import useAuthStore from '@/store/authStore';
+import { useNavigate } from 'react-router-dom';
 
-const Login = ({ handleLogin, navigateTo }) => {
+const Login = () => {
+    const { setCurrentUser } = useAuthStore();
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    // State om de specifieke foutmelding bij te houden
-    const [error, setError] = useState('');
+    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(''); // Reset de foutmelding bij elke nieuwe poging
-        setIsSubmitting(true);
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setIsLoading(true);
+        setError(null);
+
         try {
-            const data = await apiRequest('/auth/login', 'POST', { email, password });
-            handleLogin(data.token, data.user, true);
+            const data = await loginUser({ email, password });
+
+            if (data && data.token) {
+                setCurrentUser(data.token);
+                const user = data.user;
+                const targetView = user.role === 'admin' ? '/admin-dashboard' : '/dashboard';
+                navigate(targetView);
+            } else {
+                setError('Login succesvol, maar ongeldige response van server.');
+            }
         } catch (err) {
-            // Vang de fout op en zet de specifieke boodschap in de state
-            setError(err.message);
+            setError('Inloggen mislukt. Controleer je e-mail en wachtwoord.');
+            console.error("Login API Fout:", err);
         } finally {
-            setIsSubmitting(false);
+            setIsLoading(false);
         }
     };
 
     return (
         <div className="auth-container">
-            <form onSubmit={handleSubmit} className="card-default p-8 space-y-4">
+            <form onSubmit={handleSubmit} className="card-default p-8 space-y-4 max-w-md w-full">
                 <h2 className="form-title">Inloggen</h2>
-
                 <input 
                     type="email" 
                     placeholder="E-mailadres" 
@@ -48,21 +57,18 @@ const Login = ({ handleLogin, navigateTo }) => {
                     autoComplete="current-password" 
                     required 
                 />
-                
-                <button type="submit" disabled={isSubmitting} className="w-full btn-primary">
-                    {isSubmitting ? <span className="loading-spinner"></span> : 'Login'}
+                <button 
+                    type="submit"
+                    disabled={isLoading} 
+                    className="w-full btn btn-primary"
+                >
+                    {isLoading ? 'Bezig...' : 'Login'}
                 </button>
-                
-                {/* De foutmelding is nu een strakke, rode tekst */}
                 {error && (
                     <p className="text-center text-sm text-red-600 font-semibold pt-2">
                         {error}
                     </p>
                 )}
-                
-                <p className="text-center text-sm text-gray-600 pt-2">
-                    Nog geen account? <span onClick={() => navigateTo('register')} className="font-semibold link-default">Registreer hier</span>
-                </p>
             </form>
         </div>
     );

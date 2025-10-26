@@ -1,18 +1,20 @@
 // src/components/AddMaterialModal.jsx
 import React, { useState } from 'react';
-import { apiRequest } from '../api';
+// GEWIJZIGD: Importeer de nieuwe, specifieke functie
+import { createMaterial } from '@/api';
 
 const AddMaterialModal = ({ isOpen, onClose, onMaterialAdded, showNotification }) => {
     const initialState = {
         name: '',
         type: 'SHEET',
         unit: 'vellen',
-        thickness: '', // Nieuw veld
+        thickness: '',
         pricingModel: 'PER_SHEET',
         price: '',
         sheetWidth_mm: '',
         sheetHeight_mm: '',
         rollWidth_mm: '',
+        rollLength_m: '',
     };
     const [formData, setFormData] = useState(initialState);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,13 +28,14 @@ const AddMaterialModal = ({ isOpen, onClose, onMaterialAdded, showNotification }
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const newMaterial = await apiRequest('/materials', 'POST', formData);
+            // GEWIJZIGD: Gebruik de nieuwe, veilige functie
+            const newMaterial = await createMaterial(formData);
             showNotification(`Materiaal '${newMaterial.name}' succesvol aangemaakt!`, 'success');
             onMaterialAdded();
             onClose();
             setFormData(initialState);
         } catch (error) {
-            showNotification(error.message, 'error');
+            showNotification(error.response?.data?.error || 'Aanmaken mislukt', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -73,7 +76,10 @@ const AddMaterialModal = ({ isOpen, onClose, onMaterialAdded, showNotification }
                                 </>
                             )}
                             {formData.type === 'ROLL' && (
-                                <input type="number" name="rollWidth_mm" placeholder="Rol breedte (mm)" value={formData.rollWidth_mm} onChange={handleChange} className="input input-bordered w-full" />
+                                <>
+                                    <input type="number" name="rollWidth_mm" placeholder="Rol breedte (mm)" value={formData.rollWidth_mm} onChange={handleChange} className="input input-bordered w-full" />
+                                    <input type="number" name="rollLength_m" placeholder="Rol lengte (m)" value={formData.rollLength_m} onChange={handleChange} className="input input-bordered w-full" />
+                                </>
                             )}
                         </div>
                     </div>

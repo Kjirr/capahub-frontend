@@ -1,15 +1,21 @@
 // src/components/CreateOffer.jsx
 
 import React, { useState } from 'react';
-import { apiRequest } from '../api';
+// --- START WIJZIGING: useNavigate importeren ---
+import { useNavigate } from 'react-router-dom';
+import { createOffer } from '@/api';
+// --- EINDE WIJZIGING ---
 
-const CreateOffer = ({ showNotification, navigateTo }) => {
+// --- START WIJZIGING: 'navigateTo' prop verwijderd ---
+const CreateOffer = ({ showNotification }) => {
+    const navigate = useNavigate(); // Hook initialiseren
+    // --- EINDE WIJZIGING ---
     const [formData, setFormData] = useState({
         machineType: '',
         material: '',
         capacityDetails: '',
         price: '',
-        location: '' // <-- Nieuw veld
+        location: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,9 +28,11 @@ const CreateOffer = ({ showNotification, navigateTo }) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await apiRequest('/offers', 'POST', formData);
+            await createOffer(formData);
             showNotification('Aanbod succesvol geplaatst!');
-            navigateTo('my-offers');
+            // --- START WIJZIGING: 'navigate' gebruiken met correcte URL ---
+            navigate('/my-offers');
+            // --- EINDE WIJZIGING ---
         } catch (error) {
             showNotification(error.message, 'error');
         } finally {
@@ -36,7 +44,15 @@ const CreateOffer = ({ showNotification, navigateTo }) => {
 
     return (
         <div className="form-container">
-            <h1 className="page-title mb-6">Nieuw Aanbod Plaatsen</h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="page-title">Nieuw Aanbod Plaatsen</h1>
+                {/* --- START WIJZIGING: 'navigate' gebruiken met correcte URL --- */}
+                <button onClick={() => navigate('/offers-dashboard')} className="btn btn-ghost">
+                    &larr; Terug naar overzicht
+                </button>
+                {/* --- EINDE WIJZIGING --- */}
+            </div>
+
             <form onSubmit={handleSubmit} className="card p-6 space-y-6">
                 <div>
                     <label htmlFor="machineType" className="form-label">Machinetype</label>

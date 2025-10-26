@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { apiRequest } from '../api';
+// GEWIJZIGD: Importeer de nieuwe, specifieke functie
+import { createStockLocation } from '@/api';
 
 const LocationModal = ({ isOpen, onClose, onLocationAdded, showNotification }) => {
     const initialState = { name: '', description: '' };
@@ -14,13 +15,14 @@ const LocationModal = ({ isOpen, onClose, onLocationAdded, showNotification }) =
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const newLocation = await apiRequest('/stock-locations', 'POST', formData);
+            // GEWIJZIGD: Gebruik de nieuwe, veilige functie
+            const newLocation = await createStockLocation(formData);
             showNotification(`Locatie '${newLocation.name}' succesvol aangemaakt!`, 'success');
             onLocationAdded();
             onClose();
             setFormData(initialState);
         } catch (error) {
-            showNotification(error.message, 'error');
+            showNotification(error.response?.data?.error || 'Aanmaken mislukt.', 'error');
         } finally {
             setIsSubmitting(false);
         }

@@ -1,18 +1,21 @@
 // src/components/Register.jsx
 
 import React, { useState } from 'react';
-import { apiRequest } from '../api';
+import { useNavigate } from 'react-router-dom';
+import { registerUser } from '@/api';
 
-const Register = ({ showNotification, navigateTo }) => {
+const Register = ({ showNotification }) => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         bedrijfsnaam: '',
         kvk: '',
-        name: '', // Naam van de ordermanager
+        name: '',
         email: '',
         password: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
     const handleChange = (e) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -23,16 +26,29 @@ const Register = ({ showNotification, navigateTo }) => {
         setIsSubmitting(true);
         setError('');
         try {
-            // Het 'formData' object bevat nu alle benodigde velden, inclusief 'name'
-            const data = await apiRequest('/auth/register', 'POST', formData);
-            showNotification(data.message, 'success');
-            navigateTo('login');
+            await registerUser(formData);
+            setRegistrationSuccess(true);
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data?.error || 'Er is een onbekende fout opgetreden.');
         } finally {
             setIsSubmitting(false);
         }
     };
+
+    if (registrationSuccess) {
+        return (
+            <div className="max-w-md mx-auto mt-10">
+                <div className="card-default p-8 text-center">
+                    <h2 className="form-title text-green-600">Registratie succesvol!</h2>
+                    <p className="mt-4">Er is een verificatie-e-mail verzonden naar <strong>{formData.email}</strong>.</p>
+                    <p className="mt-2">Klik op de link in de e-mail om je account te activeren. Controleer ook je spam-map.</p>
+                    <button onClick={() => navigate('/login')} className="w-full btn btn-primary mt-6">
+                        Terug naar Inloggen
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-md mx-auto mt-10">
@@ -45,13 +61,12 @@ const Register = ({ showNotification, navigateTo }) => {
                 <input name="kvk" type="text" placeholder="KvK-nummer" value={formData.kvk} onChange={handleChange} className="form-input" required />
 
                 <h3 className="form-section-header">Uw Account (Eigenaar)</h3>
-                {/* DE FIX: Het veld voor de naam van de gebruiker is hier toegevoegd */}
                 <input name="name" type="text" placeholder="Uw volledige naam" value={formData.name} onChange={handleChange} className="form-input" required />
                 <input name="email" type="email" placeholder="Uw e-mailadres" value={formData.email} onChange={handleChange} className="form-input" required />
                 <input name="password" type="password" placeholder="Wachtwoord" value={formData.password} onChange={handleChange} className="form-input" required />
                 
-                <button type="submit" disabled={isSubmitting} className="w-full btn-primary">
-                    {isSubmitting ? <span className="loading-spinner"></span> : 'Registreren'}
+                <button type="submit" disabled={isSubmitting} className="w-full btn btn-primary">
+                    {isSubmitting ? 'Bezig...' : 'Registreren'}
                 </button>
             </form>
         </div>

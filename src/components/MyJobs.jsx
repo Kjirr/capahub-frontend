@@ -1,30 +1,37 @@
 // src/components/MyJobs.jsx
 
-import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../api';
+import React, { useState, useEffect, useCallback } from 'react';
+// --- START WIJZIGING: Hooks voor navigatie en gebruiker importeren ---
+import { useNavigate } from 'react-router-dom';
+import useAuthStore from '@/store/authStore';
+import { getMyJobs } from '@/api';
+// --- EINDE WIJZIGING ---
 
-const MyJobs = ({ showNotification, navigateTo, currentUser }) => {
+// --- START WIJZIGING: Props bijgewerkt ---
+const MyJobs = ({ showNotification }) => {
+    const navigate = useNavigate();
+    const { currentUser } = useAuthStore();
+    // --- EINDE WIJZIGING ---
     const [jobs, setJobs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchMyJobs = async () => {
-            setIsLoading(true);
-            try {
-                const data = await apiRequest('/jobs/my-jobs', 'GET');
-                setJobs(data);
-            } catch (error) {
-                showNotification(error.message, 'error');
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    const fetchMyJobs = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const data = await getMyJobs();
+            setJobs(data);
+        } catch (error) {
+            showNotification(error.message, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showNotification]);
 
-        // DE FIX: Voer de fetch alleen uit als we zeker weten wie de gebruiker is.
+    useEffect(() => {
         if (currentUser) {
             fetchMyJobs();
         }
-    }, [currentUser, showNotification]);
+    }, [currentUser, fetchMyJobs]);
 
     if (isLoading) {
         return <div className="loading-text">Mijn opdrachten laden...</div>;
@@ -37,9 +44,16 @@ const MyJobs = ({ showNotification, navigateTo, currentUser }) => {
                     <h1 className="page-title">Mijn Opdrachten</h1>
                     <p className="page-subtitle">Hier vindt u een overzicht van alle opdrachten die u heeft geplaatst.</p>
                 </div>
-                <button onClick={() => navigateTo('create-job')} className="btn-primary">
-                    Nieuwe Opdracht Plaatsen
-                </button>
+                {/* --- START WIJZIGING: Navigatieknoppen bijgewerkt --- */}
+                <div className="flex items-center space-x-2">
+                    <button onClick={() => navigate('/jobs-dashboard')} className="btn btn-ghost">
+                        &larr; Terug
+                    </button>
+                    <button onClick={() => navigate('/create-job')} className="btn btn-primary">
+                        Nieuwe Opdracht Plaatsen
+                    </button>
+                </div>
+                {/* --- EINDE WIJZIGING --- */}
             </div>
             
             {jobs.length === 0 ? (
@@ -51,7 +65,9 @@ const MyJobs = ({ showNotification, navigateTo, currentUser }) => {
                     {jobs.map(job => (
                         <div 
                             key={job.id} 
-                            onClick={() => navigateTo('job-details', job.id)} 
+                            // --- START WIJZIGING: Navigatie bijgewerkt ---
+                            onClick={() => navigate(`/job-details/${job.id}`)} 
+                            // --- EINDE WIJZIGING ---
                             className="card-interactive"
                         >
                             <div className="card-body flex-row justify-between items-center">

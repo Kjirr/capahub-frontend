@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { apiRequest } from '../api';
+import { 
+    getPurchaseOrderById, 
+    getStockLocations,
+    updatePurchaseOrderStatus,
+    sendPurchaseOrder
+} from '../api';
 
 const PurchaseOrderDetail = ({ viewParam: poId, showNotification, navigateTo }) => {
     const [purchaseOrder, setPurchaseOrder] = useState(null);
@@ -7,8 +12,6 @@ const PurchaseOrderDetail = ({ viewParam: poId, showNotification, navigateTo }) 
     const [selectedStatus, setSelectedStatus] = useState('');
     const [isUpdating, setIsUpdating] = useState(false);
     const [isSending, setIsSending] = useState(false);
-
-    // --- NIEUWE STATE VOOR INBOEKEN ---
     const [locations, setLocations] = useState([]);
     const [selectedLocationId, setSelectedLocationId] = useState('');
 
@@ -18,10 +21,9 @@ const PurchaseOrderDetail = ({ viewParam: poId, showNotification, navigateTo }) 
         if (!poId) return;
         setIsLoading(true);
         try {
-            // Haal zowel de PO details als de locaties tegelijk op
             const [poData, locationsData] = await Promise.all([
-                apiRequest(`/purchase-orders/${poId}`, 'GET'),
-                apiRequest('/stock-locations', 'GET')
+                getPurchaseOrderById(poId),
+                getStockLocations()
             ]);
             
             setPurchaseOrder(poData);
@@ -44,7 +46,6 @@ const PurchaseOrderDetail = ({ viewParam: poId, showNotification, navigateTo }) 
         
         const payload = { status: selectedStatus };
         
-        // Als we inboeken, voeg de locatie toe aan de payload
         if (selectedStatus === 'RECEIVED') {
             if (!selectedLocationId) {
                 showNotification('Selecteer een locatie om de goederen in te boeken.', 'warn');
@@ -55,9 +56,9 @@ const PurchaseOrderDetail = ({ viewParam: poId, showNotification, navigateTo }) 
         }
 
         try {
-            const response = await apiRequest(`/purchase-orders/${poId}/status`, 'PUT', payload);
+            const response = await updatePurchaseOrderStatus(poId, payload);
             showNotification(response.message, 'success');
-            fetchPageData(); // Herlaad alle data
+            fetchPageData();
         } catch (error) {
             showNotification(error.message, 'error');
         } finally {
@@ -71,7 +72,7 @@ const PurchaseOrderDetail = ({ viewParam: poId, showNotification, navigateTo }) 
         }
         setIsSending(true);
         try {
-            const response = await apiRequest(`/purchase-orders/${poId}/send`, 'POST');
+            const response = await sendPurchaseOrder(poId);
             showNotification(response.message, 'success');
             fetchPageData();
         } catch (error) {
@@ -79,6 +80,10 @@ const PurchaseOrderDetail = ({ viewParam: poId, showNotification, navigateTo }) 
         } finally {
             setIsSending(false);
         }
+    };
+
+    const handleViewReceipt = () => {
+        navigateTo('purchase-order-receipt', poId);
     };
 
     const calculateTotal = () => {
@@ -147,6 +152,9 @@ const PurchaseOrderDetail = ({ viewParam: poId, showNotification, navigateTo }) 
                                 <button className="btn btn-success w-full" onClick={handleSendOrder} disabled={isSending}>
                                     {isSending ? 'Bezig...' : 'Verstuur naar Leverancier'}
                                 </button>
+                                <button className="btn btn-outline w-full mt-2" onClick={handleViewReceipt}>
+                                    Bekijk Bon
+                                </button>
                                 <div className="divider">OF</div>
                             </>
                         )}
@@ -185,9 +193,34 @@ const PurchaseOrderDetail = ({ viewParam: poId, showNotification, navigateTo }) 
                     <h2 className="card-title mb-4">Orderregels</h2>
                     <div className="overflow-x-auto">
                         <table className="table w-full">
-                            <thead><tr><th>Materiaal</th><th className="text-right">Aantal</th><th className="text-right">Prijs p/st (€)</th><th className="text-right">Subtotaal (€)</th></tr></thead>
-                            <tbody>{purchaseOrder.items.map(item => (<tr key={item.id}><td><strong>{item.material.name}</strong></td><td className="text-right">{item.quantity} {item.material.name}</td><td className="text-right">{item.purchasePrice.toFixed(2)}</td><td className="text-right">{(item.quantity * item.purchasePrice).toFixed(2)}</td></tr>))}</tbody>
-                            <tfoot><tr className="font-bold"><td colSpan="3" className="text-right">Totaal Excl. BTW</td><td className="text-right">{total.toFixed(2)}</td></tr></tfoot>
+                            {/* --- ▼▼▼ HIER ZIT DE CORRECTIE ▼▼▼ --- */}
+                            <thead>
+                                <tr>
+                                    <th>Materiaal</th>
+                                    <th>Type</th>
+                                    <th className="text-right">Aantal</th>
+                                    <th className="text-right">Prijs p/st (€)</th>
+                                    <th className="text-right">Subtotaal (€)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {purchaseOrder.items.map(item => (
+                                    <tr key={item.id}>
+                                        <td><strong>{item.material.name}</strong></td>
+                                        <td><span className="badge badge-ghost">{item.material.type}</span></td>
+                                        <td className="text-right">{item.quantity} {item.material.unit}</td>
+                                        <td className="text-right">{item.purchasePrice.toFixed(2)}</td>
+                                        <td className="text-right">{(item.quantity * item.purchasePrice).toFixed(2)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot>
+                                <tr className="font-bold">
+                                    <td colSpan="4" className="text-right">Totaal Excl. BTW</td>
+                                    <td className="text-right">{total.toFixed(2)}</td>
+                                </tr>
+                            </tfoot>
+                             {/* --- ▲▲▲ EINDE CORRECTIE ▲▲▲ --- */}
                         </table>
                     </div>
                 </div>

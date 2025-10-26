@@ -1,14 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { apiRequest } from '../api';
+// --- START WIJZIGING: useNavigate importeren ---
+import { useNavigate } from 'react-router-dom';
+import { getPurchaseOrders } from '@/api';
+// --- EINDE WIJZIGING ---
 
-const PurchaseOrderManagement = ({ showNotification, navigateTo }) => {
+// --- START WIJZIGING: 'navigateTo' prop verwijderd ---
+const PurchaseOrderManagement = ({ showNotification }) => {
+    const navigate = useNavigate(); // Hook initialiseren
+    // --- EINDE WIJZIGING ---
     const [purchaseOrders, setPurchaseOrders] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchPurchaseOrders = useCallback(async () => {
         setIsLoading(true);
         try {
-            const data = await apiRequest('/purchase-orders', 'GET');
+            const data = await getPurchaseOrders();
             setPurchaseOrders(data);
         } catch (error) {
             showNotification(error.message, 'error');
@@ -32,12 +38,19 @@ const PurchaseOrderManagement = ({ showNotification, navigateTo }) => {
                     <h1 className="page-title">Inkoopbeheer</h1>
                     <p className="page-subtitle">Beheer hier alle inkooporders van uw bedrijf.</p>
                 </div>
-                <button 
-                    onClick={() => navigateTo('create-purchase-order')} 
-                    className="btn btn-primary"
-                >
-                    Nieuwe Inkooporder
-                </button>
+                {/* --- START WIJZIGING: Groepering van knoppen en 'Terug' knop toegevoegd --- */}
+                <div className="flex items-center gap-2">
+                    <button onClick={() => navigate('/settings-dashboard')} className="btn btn-ghost">
+                        ← Terug naar Instellingen
+                    </button>
+                    <button 
+                        onClick={() => navigate('/create-purchase-order')} 
+                        className="btn btn-primary"
+                    >
+                        Nieuwe Inkooporder
+                    </button>
+                </div>
+                {/* --- EINDE WIJZIGING --- */}
             </div>
 
             <div className="card bg-base-100 shadow-xl">
@@ -56,10 +69,11 @@ const PurchaseOrderManagement = ({ showNotification, navigateTo }) => {
                             <tbody>
                                 {purchaseOrders.length > 0 ? purchaseOrders.map(po => (
                                     <tr key={po.id} className="hover">
-                                        {/* --- AANGEPAST --- */}
                                         <td 
                                             className="font-bold cursor-pointer text-primary hover:underline"
-                                            onClick={() => navigateTo('purchase-order-details', po.id)}
+                                            // --- START WIJZIGING: 'navigate' gebruiken met correcte URL ---
+                                            onClick={() => navigate(`/purchase-order-details/${po.id}`)}
+                                            // --- EINDE WIJZIGING ---
                                         >
                                             {po.poNumber}
                                         </td>

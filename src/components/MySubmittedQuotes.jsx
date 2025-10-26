@@ -1,28 +1,38 @@
 // src/components/MySubmittedQuotes.jsx
 
-import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../api';
+import React, { useState, useEffect, useCallback } from 'react';
+// --- START WIJZIGING: Importeer de store ---
+import useAuthStore from '@/store/authStore';
+import { getMySubmittedQuotes } from '@/api';
+// --- EINDE WIJZIGING ---
 
-const MySubmittedQuotes = ({ showNotification, currentUser, navigateTo }) => {
+// --- START WIJZIGING: 'currentUser' als prop verwijderd ---
+const MySubmittedQuotes = ({ showNotification, navigateTo }) => {
+    // Haal de gebruiker direct uit de store
+    const { currentUser } = useAuthStore();
+    // --- EINDE WIJZIGING ---
+
     const [quotes, setQuotes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    const fetchQuotes = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const data = await getMySubmittedQuotes();
+            setQuotes(data);
+        } catch (error) {
+            showNotification(error.message, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showNotification]);
+
     useEffect(() => {
-        const fetchQuotes = async () => {
-            setIsLoading(true);
-            try {
-                const data = await apiRequest('/quotes/my-submitted', 'GET');
-                setQuotes(data);
-            } catch (error) {
-                showNotification(error.message, 'error');
-            } finally {
-                setIsLoading(false);
-            }
-        };
+        // De logica blijft hetzelfde, maar 'currentUser' komt nu uit de store
         if (currentUser) {
             fetchQuotes();
         }
-    }, [currentUser, showNotification]);
+    }, [currentUser, fetchQuotes]);
 
     if (isLoading) {
         return <div className="loading-text">Ingediende offertes laden...</div>;
@@ -53,7 +63,7 @@ const MySubmittedQuotes = ({ showNotification, currentUser, navigateTo }) => {
                                     <span className="badge-ghost">{quote.quoteNumber}</span>
                                 </div>
                                 <div className="flex items-center space-x-4 text-sm text-base-content/70 mt-2">
-                                    <span><strong>Uw Prijs:</strong> €{quote.price.toFixed(2)}</span>
+                                    <span><strong>Uw Prijs:</strong> €{Number(quote.price).toFixed(2)}</span>
                                     <span><strong>Status:</strong> {quote.status}</span>
                                     <span><strong>Offertedatum:</strong> {new Date(quote.createdAt).toLocaleDateString()}</span>
                                 </div>
@@ -66,5 +76,4 @@ const MySubmittedQuotes = ({ showNotification, currentUser, navigateTo }) => {
     );
 };
 
-// DE FIX: Deze regel was vergeten
 export default MySubmittedQuotes;

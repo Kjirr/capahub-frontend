@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { jwtDecode } from 'jwt-decode';
-import { apiRequest } from './api';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import useAuthStore from './store/authStore';
+import { initiateSocketConnection, disconnectSocket, subscribeToEvent } from './socket';
+import { LoggerProvider } from './components/LoggerContext';
 
-// --- Importeer al uw componenten ---
+// Importeer alle componenten...
+import FinishingEquipmentManagement from './components/FinishingEquipmentManagement';
+import ProductionStepTemplateBuilder from './components/ProductionStepTemplateBuilder';
+import ProductionStepTemplateEditor from './components/ProductionStepTemplateEditor';
 import Header from './components/Header';
 import Notification from './components/Notification';
 import Home from './components/Home';
@@ -20,8 +25,6 @@ import OfferDetails from './components/OfferDetails';
 import EditOffer from './components/EditOffer';
 import MySubmittedQuotes from './components/MySubmittedQuotes';
 import MyProductions from './components/MyProductions';
-import ProductionJobDetails from './components/ProductionJobDetails';
-import ProductionKanban from './components/ProductionKanban';
 import ArchivePage from './components/ArchivePage';
 import Marketplace from './components/Marketplace';
 import AdminDashboard from './components/AdminDashboard';
@@ -32,10 +35,8 @@ import NotificationsPage from './components/NotificationsPage';
 import SubmitQuote from './components/SubmitQuote';
 import EditQuote from './components/EditQuote';
 import QuoteRequests from './components/QuoteRequests';
-import MyTasks from './components/MyTasks';
 import TeamManagement from './components/TeamManagement';
 import MaterialManagement from './components/MaterialManagement';
-import SupplierManagement from './components/SupplierManagement';
 import PurchaseOrderManagement from './components/PurchaseOrderManagement';
 import CreatePurchaseOrder from './components/CreatePurchaseOrder';
 import PurchaseOrderDetail from './components/PurchaseOrderDetail';
@@ -46,124 +47,231 @@ import MarketplaceDashboard from './components/MarketplaceDashboard';
 import OffersDashboard from './components/OffersDashboard';
 import SettingsDashboard from './components/SettingsDashboard';
 import MachineManagement from './components/MachineManagement';
-import LaborRateManagement from './components/LaborRateManagement'; 
+import LaborRateManagement from './components/LaborRateManagement';
 import FinishingManagement from './components/FinishingManagement';
-import CreateQuote from './components/CreateQuote'; // NIEUW
+import CreateQuote from './components/CreateQuote';
+import ProductionStepTemplateManagement from './components/ProductionStepTemplateManagement';
+import ProductionDashboard from './components/ProductionDashboard';
+import MyProductionTasks from './components/MyProductionTasks';
+import ProductTemplateManagement from './components/ProductTemplateManagement';
+import { CreateDirectQuote } from './components/CreateDirectQuote';
+import CreateTemplatedQuote from './components/CreateTemplatedQuote';
+import DirectQuotesList from './components/DirectQuotesList';
+import DirectQuoteDetails from './components/DirectQuoteDetails';
+import EditDirectQuote from './components/EditDirectQuote';
+import OrdersList from './components/OrdersList';
+import OrderDetails from './components/OrderDetails';
+import ProductionPlanning from './components/ProductionPlanning';
+import InboxPage from './components/InboxPage';
+import AdminActivityFeed from './components/AdminActivityFeed';
+import UserDetails from './components/UserDetails';
+import CompanyProfile from './components/CompanyProfile';
+import PurchaseOrderReceipt from './components/PurchaseOrderReceipt';
+import CompanyManagementDashboard from './components/CompanyManagementDashboard';
+import ProductTemplateEditor from './components/ProductTemplateEditor';
+import ResourceManagement from './components/ResourceManagement';
+import ResourceTest from './components/ResourceTest';
+import ContactManagementPage from './components/ContactManagementPage';
+import QuoteSettingsPage from './components/QuoteSettingsPage';
+import QuoteTemplateEditor from './components/QuoteTemplateEditor';
+import DocumentTemplateManager from './components/DocumentTemplateManager';
+import TemplateEditor from './components/TemplateEditor';
+import DocumentGenerator from './components/DocumentGenerator';
+import PublicQuotePage from './components/PublicQuotePage';
+import { QuoteUploadPage, OrderConfirmedPage } from './components/QuoteUploadPage';
+import FileReviewPage from './components/FileReviewPage';
+import ProofThanksPage from './components/ProofThanksPage'; // Import van de bedankpagina
+import Expeditie from './components/Expeditie';
+import ShippingSettings from './components/ShippingSettings';
+import PartnerManagement from './components/PartnerManagement';
+import AutomationSettings from './components/AutomationSettings';
+import AssetManager from './components/AssetManager';
+import PromotieBeheer from './components/PromotieBeheer';
+import FacturatieOverzicht from './components/FacturatieOverzicht';
+import PublicInvoicePage from './components/PublicInvoicePage'; // <-- NIEUW
+
+const ProtectedRoute = ({ isLoggedIn, children }) => {
+    const location = useLocation();
+    if (!isLoggedIn) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+    return children;
+};
 
 const App = () => {
-    const [currentUser, setCurrentUser] = useState(null);
+    const { currentUser, clearCurrentUser, initializeUser } = useAuthStore();
     const [authLoading, setAuthLoading] = useState(true);
-    const [currentView, setCurrentView] = useState('home');
-    const [viewParam, setViewParam] = useState(null);
     const [notification, setNotification] = useState({ message: '', type: '' });
-    
+
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const isLoggedIn = !!currentUser;
-    const navigateTo = useCallback((view, param = null) => { const newHash = param ? `${view}/${param}` : view; if (window.location.hash !== `#${newHash}`) { window.location.hash = newHash; } }, []);
-    const showNotification = useCallback((message, type = 'success', duration = 4000) => { setNotification({ message, type }); setTimeout(() => setNotification({ message: '', type: '' }), duration); }, []);
-    const handleLogout = useCallback(() => { navigateTo('home'); localStorage.removeItem('capahub_token'); setCurrentUser(null); showNotification('U bent uitgelogd.', 'info'); }, [navigateTo, showNotification]);
-    const handleLogin = useCallback((token, user, showWelcomeNotification = true) => { localStorage.setItem('capahub_token', token); setCurrentUser(user); const targetView = user.role === 'admin' ? 'admin-dashboard' : 'dashboard'; navigateTo(targetView); if (showWelcomeNotification) showNotification('Succesvol ingelogd!'); }, [navigateTo, showNotification]);
 
-    useEffect(() => {
-        const handleRouteChange = () => {
-            const hash = window.location.hash.substring(1);
-            const [path, param] = hash.split('/');
-            const newView = path || 'home';
-            let user = null;
-            const token = localStorage.getItem('capahub_token');
-            if (token) { try { const decoded = jwtDecode(token); if (decoded.exp * 1000 > Date.now()) user = decoded; } catch (e) {} }
-            setCurrentUser(user);
-
-            const protectedRoutes = [
-                'dashboard', 'profile', 'my-jobs', 'create-job', 'job-details', 'edit-job',
-                'my-offers', 'create-offer', 'offer-details', 'edit-offer',
-                'my-submitted-quotes', 'submit-quote', 'edit-quote', 'quote-requests',
-                'my-tasks', 'my-productions', 'production-details', 'production-kanban',
-                'archive', 'marketplace', 'notifications', 'team-management',
-                'material-management', 'supplier-management', 'purchase-order-management', 'create-purchase-order',
-                'purchase-order-details', 'warehouse-management', 'jobs-dashboard', 'marketplace-dashboard',
-                'offers-dashboard', 'settings-dashboard', 'machine-management', 'labor-rate-management', 'finishing-management', 
-                'create-quote', // NIEUW
-                'admin-dashboard', 'user-management', 'company-management', 'plan-management'
-            ];
-            const adminOnlyRoutes = ['admin-dashboard', 'user-management', 'company-management', 'plan-management'];
-            const userOnlyRoutes = protectedRoutes.filter(r => !adminOnlyRoutes.includes(r));
-
-            if (!user && protectedRoutes.includes(newView)) { if (newView !== 'home') { window.location.hash = '#login'; return; } }
-            if (user) { const isAdmin = user.role === 'admin'; if (!isAdmin && adminOnlyRoutes.includes(newView)) { window.location.hash = '#dashboard'; return; } if (isAdmin && userOnlyRoutes.includes(newView)) { window.location.hash = '#admin-dashboard'; return; } }
-            
-            setCurrentView(newView);
-            setViewParam(param || null);
-            setAuthLoading(false);
-        };
-        window.addEventListener('hashchange', handleRouteChange);
-        handleRouteChange();
-        return () => window.removeEventListener('hashchange', handleRouteChange);
+    const showNotification = useCallback((message, type = 'success', duration = 4000) => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification({ message: '', type: '' }), duration);
     }, []);
 
-    const renderView = () => {
-        if (authLoading) return <div className="text-center p-10">Authenticatie controleren...</div>;
-        const props = { navigateTo, showNotification, currentUser, handleLogout };
-        
-        switch (currentView) {
-            case 'home': return <Home {...props} />;
-            case 'login': return <Login handleLogin={handleLogin} {...props} />;
-            case 'register': return <Register {...props} />;
-            case 'admin-login': return <AdminLogin {...props} handleLogin={handleLogin} />;
-            
-            case 'dashboard': return <Dashboard {...props} />;
-            case 'profile': return <ProfilePage {...props} />;
-            case 'team-management': return <TeamManagement {...props} />;
-            case 'material-management': return <MaterialManagement {...props} />;
-            case 'supplier-management': return <SupplierManagement {...props} />;
-            case 'purchase-order-management': return <PurchaseOrderManagement {...props} />;
-            case 'create-purchase-order': return <CreatePurchaseOrder {...props} />;
-            case 'purchase-order-details': return <PurchaseOrderDetail {...props} viewParam={viewParam} />;
-            case 'warehouse-management': return <WarehouseManagement {...props} />;
-            case 'jobs-dashboard': return <JobsDashboard {...props} />;
-            case 'marketplace-dashboard': return <MarketplaceDashboard {...props} />;
-            case 'offers-dashboard': return <OffersDashboard {...props} />;
-            case 'settings-dashboard': return <SettingsDashboard {...props} />;
-            case 'machine-management': return <MachineManagement {...props} />;
-            case 'labor-rate-management': return <LaborRateManagement {...props} />;
-            case 'finishing-management': return <FinishingManagement {...props} />;
-            case 'create-quote': return <CreateQuote {...props} viewParam={viewParam}/>; // NIEUW
+    const handleLogout = useCallback(() => {
+        navigate('/home');
+        setTimeout(() => {
+            clearCurrentUser();
+            disconnectSocket();
+            showNotification('U bent uitgelogd.', 'info');
+        }, 50);
+    }, [navigate, clearCurrentUser, showNotification]);
 
-            // ... overige user-specifieke routes ...
-            case 'my-jobs': return <MyJobs {...props} />;
-            case 'create-job': return <CreateJob {...props} />;
-            case 'job-details': return <JobDetails {...props} viewParam={viewParam} />;
-            case 'edit-job': return <EditJob {...props} viewParam={viewParam} />;
-            case 'my-offers': return <MyOffers {...props} />;
-            case 'create-offer': return <CreateOffer {...props} />;
-            case 'offer-details': return <OfferDetails {...props} viewParam={viewParam} />;
-            case 'edit-offer': return <EditOffer {...props} viewParam={viewParam} />;
-            case 'my-submitted-quotes': return <MySubmittedQuotes {...props} />;
-            case 'submit-quote': return <SubmitQuote {...props} viewParam={viewParam} />;
-            case 'edit-quote': return <EditQuote {...props} viewParam={viewParam} />;
-            case 'quote-requests': return <QuoteRequests {...props} />;
-            case 'my-tasks': return <MyTasks {...props} />;
-            case 'my-productions': return <MyProductions {...props} />;
-            case 'production-details': return <ProductionJobDetails {...props} viewParam={viewParam} />;
-            case 'production-kanban': return <ProductionKanban {...props} />;
-            case 'archive': return <ArchivePage {...props} />;
-            case 'marketplace': return <Marketplace {...props} />;
-            case 'notifications': return <NotificationsPage {...props} />;
+    useEffect(() => {
+        initializeUser();
+        setAuthLoading(false);
+    }, [initializeUser]);
 
-            case 'admin-dashboard': return <AdminDashboard {...props} />;
-            case 'user-management': return <UserManagement {...props} />;
-            case 'company-management': return <CompanyManagement {...props} />;
-            case 'plan-management': return <PlanManagement {...props} />;
-            
-            default: return <Home {...props} />;
+    useEffect(() => {
+        if (currentUser) {
+            initiateSocketConnection();
+            subscribeToEvent('newNotification', (newNotification) => showNotification(newNotification.message, 'info'));
+            return () => disconnectSocket();
         }
-    };
+    }, [currentUser, showNotification]);
+
+    if (authLoading) {
+        return <div className="text-center p-10">Authenticatie controleren...</div>;
+    }
+
+    const routeProps = { showNotification };
 
     return (
+      <LoggerProvider>
         <div className="min-h-screen bg-slate-50">
-            <Header isLoggedIn={isLoggedIn} navigateTo={navigateTo} handleLogout={handleLogout} currentUser={currentUser} />
+            {/* Conditional Header Rendering */}
+            { !location.pathname.startsWith('/public-quote') &&
+              !location.pathname.startsWith('/quote-accepted') &&
+              !location.pathname.startsWith('/order-confirmed') &&
+              !location.pathname.startsWith('/file-review') &&
+              !location.pathname.startsWith('/proof-feedback-received') &&
+              !location.pathname.startsWith('/public-invoice') && // <-- NIEUW
+              <Header handleLogout={handleLogout} />
+            }
+
+            {/* Notification Component */}
             {notification.message && <Notification message={notification.message} type={notification.type} />}
-            <main className="container mx-auto p-4 md:p-6">{renderView()}</main>
+
+            {/* Main Content Area */}
+            <main className="w-full max-w-none px-4 md:px-6">
+                <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Home />} />
+                    <Route path="/home" element={<Home />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register {...routeProps} />} />
+                    <Route path="/admin-login" element={<Login />} /> {/* Assuming admin uses the same login */}
+                    <Route path="/public-quote/:token" element={<PublicQuotePage />} />
+                    <Route path="/quote-accepted/:token" element={<QuoteUploadPage showNotification={showNotification} />} />
+                    <Route path="/order-confirmed" element={<OrderConfirmedPage />} />
+                    <Route path="/file-review/:token" element={<FileReviewPage />} />
+                    <Route path="/proof-feedback-received/:token" element={<ProofThanksPage />} />
+                    <Route path="/public-invoice/:token" element={<PublicInvoicePage />} /> {/* <-- NIEUW */}
+
+                    {/* Protected Routes */}
+                    <Route path="/dashboard" element={<ProtectedRoute isLoggedIn={isLoggedIn}><Dashboard /></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ProfilePage {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/inbox" element={<ProtectedRoute isLoggedIn={isLoggedIn}><InboxPage {...routeProps} /></ProtectedRoute>} />
+
+                    {/* Team & Company Management */}
+                    <Route path="/team-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><TeamManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/company-profile" element={<ProtectedRoute isLoggedIn={isLoggedIn}><CompanyProfile {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/company-management-dashboard" element={<ProtectedRoute isLoggedIn={isLoggedIn}><CompanyManagementDashboard /></ProtectedRoute>} />
+
+                    {/* Job & Offer Management */}
+                    <Route path="/jobs-dashboard" element={<ProtectedRoute isLoggedIn={isLoggedIn}><JobsDashboard /></ProtectedRoute>} />
+                    <Route path="/my-jobs" element={<ProtectedRoute isLoggedIn={isLoggedIn}><MyJobs {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/create-job" element={<ProtectedRoute isLoggedIn={isLoggedIn}><CreateJob {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/job-details/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><JobDetails {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/edit-job/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><EditJob {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/offers-dashboard" element={<ProtectedRoute isLoggedIn={isLoggedIn}><OffersDashboard /></ProtectedRoute>} />
+                    <Route path="/my-offers" element={<ProtectedRoute isLoggedIn={isLoggedIn}><MyOffers {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/create-offer" element={<ProtectedRoute isLoggedIn={isLoggedIn}><CreateOffer {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/offer-details/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><OfferDetails {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/edit-offer/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><EditOffer {...routeProps} /></ProtectedRoute>} />
+
+                    {/* Quote Management */}
+                    <Route path="/my-submitted-quotes" element={<ProtectedRoute isLoggedIn={isLoggedIn}><MySubmittedQuotes {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/submit-quote/:jobId" element={<ProtectedRoute isLoggedIn={isLoggedIn}><SubmitQuote {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/edit-quote/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><EditQuote {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/quote-requests" element={<ProtectedRoute isLoggedIn={isLoggedIn}><QuoteRequests {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/create-quote/:jobId" element={<ProtectedRoute isLoggedIn={isLoggedIn}><CreateQuote {...routeProps} /></ProtectedRoute>} /> {/* Likely legacy? */}
+                    <Route path="/create-direct-quote" element={<ProtectedRoute isLoggedIn={isLoggedIn}><CreateDirectQuote {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/create-templated-quote" element={<ProtectedRoute isLoggedIn={isLoggedIn}><CreateTemplatedQuote {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/direct-quotes-list" element={<ProtectedRoute isLoggedIn={isLoggedIn}><DirectQuotesList {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/direct-quote-details/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><DirectQuoteDetails {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/edit-direct-quote/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><EditDirectQuote {...routeProps} /></ProtectedRoute>} />
+
+                    {/* Production & Planning */}
+                    <Route path="/my-productions" element={<ProtectedRoute isLoggedIn={isLoggedIn}><MyProductions /></ProtectedRoute>} /> {/* High-level overview? */}
+                    <Route path="/production-planning" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ProductionPlanning {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/production-kanban" element={<ProtectedRoute isLoggedIn={isLoggedIn}><MyProductionTasks {...routeProps} /></ProtectedRoute>} /> {/* Alias for MyProductionTasks? */}
+                    <Route path="/my-production-tasks" element={<ProtectedRoute isLoggedIn={isLoggedIn}><MyProductionTasks {...routeProps} /></ProtectedRoute>} />
+
+                    {/* Orders */}
+                    <Route path="/orders-list" element={<ProtectedRoute isLoggedIn={isLoggedIn}><OrdersList {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/order-details/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><OrderDetails {...routeProps} /></ProtectedRoute>} />
+
+                    {/* Warehouse & Purchasing */}
+                    <Route path="/material-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><MaterialManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/warehouse-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><WarehouseManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/purchase-order-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><PurchaseOrderManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/create-purchase-order" element={<ProtectedRoute isLoggedIn={isLoggedIn}><CreatePurchaseOrder {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/purchase-order-details/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><PurchaseOrderDetail {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/purchase-order-receipt/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><PurchaseOrderReceipt {...routeProps} /></ProtectedRoute>} />
+
+                    {/* Resource & Template Management */}
+                    <Route path="/resource-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ResourceManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/machine-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><MachineManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/labor-rate-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><LaborRateManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/finishing-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><FinishingManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/finishing-equipment-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><FinishingEquipmentManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/production-step-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ProductionStepTemplateManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/production-step-template-builder" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ProductionStepTemplateBuilder {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/production-step-template-editor/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ProductionStepTemplateEditor {...routeProps} /></ProtectedRoute>} /> {/* Assuming this is correct editor */}
+                    <Route path="/product-template-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ProductTemplateManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/product-template-editor/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ProductTemplateEditor {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/document-templates" element={<ProtectedRoute isLoggedIn={isLoggedIn}><DocumentTemplateManager {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/template-editor/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><TemplateEditor {...routeProps} /></ProtectedRoute>} />
+
+                    {/* Settings & Other */}
+                    <Route path="/settings-dashboard" element={<ProtectedRoute isLoggedIn={isLoggedIn}><SettingsDashboard /></ProtectedRoute>} />
+                    <Route path="/archive" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ArchivePage {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/marketplace-dashboard" element={<ProtectedRoute isLoggedIn={isLoggedIn}><MarketplaceDashboard /></ProtectedRoute>} />
+                    <Route path="/marketplace" element={<ProtectedRoute isLoggedIn={isLoggedIn}><Marketplace /></ProtectedRoute>} />
+                    <Route path="/notifications" element={<ProtectedRoute isLoggedIn={isLoggedIn}><NotificationsPage {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/resource-test" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ResourceTest /></ProtectedRoute>} /> {/* For testing? */}
+                    <Route path="/contact-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ContactManagementPage {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/quote-settings" element={<ProtectedRoute isLoggedIn={isLoggedIn}><QuoteSettingsPage {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/quote-template-editor" element={<ProtectedRoute isLoggedIn={isLoggedIn}><QuoteTemplateEditor {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/generate-document/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><DocumentGenerator {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/expeditie" element={<ProtectedRoute isLoggedIn={isLoggedIn}><Expeditie {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/shipping-settings" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ShippingSettings {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/partner-management/:type" element={<ProtectedRoute isLoggedIn={isLoggedIn}><PartnerManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/automation-settings" element={<ProtectedRoute isLoggedIn={isLoggedIn}><AutomationSettings {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/asset-manager" element={<ProtectedRoute isLoggedIn={isLoggedIn}><AssetManager {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/promotie-beheer" element={<ProtectedRoute isLoggedIn={isLoggedIn}><PromotieBeheer {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/facturatie" element={<ProtectedRoute isLoggedIn={isLoggedIn}><FacturatieOverzicht {...routeProps} /></ProtectedRoute>} />
+
+                    {/* Admin Routes */}
+                    <Route path="/admin-dashboard" element={<ProtectedRoute isLoggedIn={isLoggedIn}><AdminDashboard /></ProtectedRoute>} />
+                    <Route path="/user-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><UserManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/company-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><CompanyManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/plan-management" element={<ProtectedRoute isLoggedIn={isLoggedIn}><PlanManagement {...routeProps} /></ProtectedRoute>} />
+                    <Route path="/admin-activity-feed" element={<ProtectedRoute isLoggedIn={isLoggedIn}><AdminActivityFeed /></ProtectedRoute>} />
+                    <Route path="/user-details/:id" element={<ProtectedRoute isLoggedIn={isLoggedIn}><UserDetails {...routeProps} /></ProtectedRoute>} />
+
+                    {/* Fallback Route */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </main>
         </div>
+      </LoggerProvider>
     );
 };
 

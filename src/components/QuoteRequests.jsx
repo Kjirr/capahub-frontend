@@ -1,17 +1,24 @@
 // src/components/QuoteRequests.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { apiRequest } from '../api';
+// --- START WIJZIGING: Importeer de store ---
+import useAuthStore from '@/store/authStore';
+import { getMarketplaceJobs, assignJobToSelf } from '@/api';
+// --- EINDE WIJZIGING ---
 
-const QuoteRequests = ({ showNotification, navigateTo, currentUser }) => {
+// --- START WIJZIGING: 'currentUser' als prop verwijderd ---
+const QuoteRequests = ({ showNotification, navigateTo }) => {
+    // Haal de gebruiker direct uit de store
+    const { currentUser } = useAuthStore();
+    // --- EINDE WIJZIGING ---
+
     const [requests, setRequests] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchRequests = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Deze route haalt de niet-toegewezen opdrachten van de marktplaats op
-            const data = await apiRequest('/marketplace/jobs', 'GET');
+            const data = await getMarketplaceJobs();
             setRequests(data);
         } catch (error) {
             showNotification(error.message, 'error');
@@ -21,6 +28,7 @@ const QuoteRequests = ({ showNotification, navigateTo, currentUser }) => {
     }, [showNotification]);
 
     useEffect(() => {
+        // De logica blijft hetzelfde, maar 'currentUser' komt nu uit de store
         if (currentUser) {
             fetchRequests();
         }
@@ -28,13 +36,12 @@ const QuoteRequests = ({ showNotification, navigateTo, currentUser }) => {
 
     const handleAssign = async (jobId) => {
         try {
-            await apiRequest(`/jobs/${jobId}/assign`, 'PUT');
+            await assignJobToSelf(jobId);
             showNotification('Opdracht aan uzelf toegewezen. U kunt nu een offerte indienen.', 'success');
-            // Stuur de gebruiker direct naar de offertepagina
             navigateTo('submit-quote', jobId);
         } catch (error) {
             showNotification(error.message, 'error');
-            fetchRequests(); // Herlaad de lijst als het toewijzen mislukt
+            fetchRequests();
         }
     };
 

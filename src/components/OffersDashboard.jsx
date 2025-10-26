@@ -1,6 +1,12 @@
 import React from 'react';
+// --- START WIJZIGING: useNavigate importeren ---
+import { useNavigate } from 'react-router-dom';
+// --- EINDE WIJZIGING ---
 
-const OffersDashboard = ({ navigateTo }) => {
+// --- START WIJZIGING: 'navigateTo' prop verwijderd ---
+const OffersDashboard = () => {
+    const navigate = useNavigate(); // Hook initialiseren
+    // --- EINDE WIJZIGING ---
     return (
         <div className="page-container">
             <div className="mb-8">
@@ -9,8 +15,9 @@ const OffersDashboard = ({ navigateTo }) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* --- START WIJZIGING: 'navigate' gebruiken met correcte URL --- */}
                 <div 
-                    onClick={() => navigateTo('create-offer')} 
+                    onClick={() => navigate('/create-offer')} 
                     className="card-interactive bg-teal-600 text-white"
                 >
                     <div className="card-body items-center text-center">
@@ -19,7 +26,7 @@ const OffersDashboard = ({ navigateTo }) => {
                     </div>
                 </div>
                 <div 
-                    onClick={() => navigateTo('my-offers')} 
+                    onClick={() => navigate('/my-offers')} 
                     className="card-interactive"
                 >
                     <div className="card-body items-center text-center">
@@ -27,6 +34,7 @@ const OffersDashboard = ({ navigateTo }) => {
                         <p>Bekijk en beheer uw actieve aanbiedingen.</p>
                     </div>
                 </div>
+                {/* --- EINDE WIJZIGING --- */}
             </div>
         </div>
     );
